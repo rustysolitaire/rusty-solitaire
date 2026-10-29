@@ -26,6 +26,7 @@ APP = Path(__file__).resolve().parents[1]
 HELP = Path(sys.argv[1]) if len(sys.argv) > 1 else APP.parent / "reference/aisleriot-original/help/C"
 GAMES = APP / "assets/games"
 GFDL = APP / "assets/licenses/COPYING.GFDL"
+SOURCE = HELP.parents[1]  # the AisleRiot source: games/, po/ for the credits
 OUT = APP / "assets/help/rules.html"
 
 
@@ -309,6 +310,8 @@ kbd { display: inline-block; font: .85em ui-monospace, "SF Mono", "Cascadia Mono
 .pager a { text-decoration: none; }
 .pager span { display: block; font-size: .8rem; color: var(--ink-soft); }
 .pager a:last-child { text-align: right; }
+.credits th { width: auto; }
+.credits th[scope="col"] { background: var(--paper-alt); }
 .license { white-space: pre-wrap; font: .85rem/1.5 ui-monospace, "DejaVu Sans Mono", monospace; }
 footer { border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .88rem; padding: 18px 0 28px; }
 """
@@ -331,6 +334,226 @@ find.addEventListener("input", () => {
   const q = find.value.trim().toLowerCase();
   for (const li of document.querySelectorAll(".games li")) li.hidden = !li.dataset.name.includes(q);
 });
+"""
+
+
+# ---- Credits ----
+#
+# Everyone the original AisleRiot names: the About box (window.c), the
+# AUTHORS files, the rule files' copyright lines, the manual, the card
+# designs' READMEs and the translations' translator-credits. Names only;
+# e-mail addresses are left out.
+
+PROGRAM = [  # window.c, "Main game:"
+    ("Jonathan Blandford", "Wrote AisleRiot (as GNOME Solitaire), 1998–2006"),
+    ("Felix Bellaby", "Program and card drawing"),
+    ("Rosanna Yuen", "Program, most of the games and the manual"),
+    ("Callum McKenzie", "Program, maintainer of GNOME Games"),
+    ("Christian Persch", "Program and maintainer from 2007, GTK 3 port"),
+    ("Andreas Røsdal", "Program"),
+]
+
+GAME_PROGRAMMERS = [  # window.c, "Card games:"
+    "Jonathan Blandford", "W. Borgert", "Robert Brady", "Nick Lamb", "Changwoo Ryu",
+    "Matthew Wilcox", "Rosanna Yuen", "Alan Horkan", "Richard Hoelscher", "Vincent Povirk",
+    "Sapphire Becker", "Gwyneth Morgan",
+]
+
+DOCUMENTATION = [
+    ("Rosanna Yuen", "Wrote and maintained the manual"),
+    ("Telsa Gwynne", "Additional material for the manual"),
+]
+
+CARD_DESIGNS = {  # cards/README.* and the About box's artists
+    "adler": "Bruno Pellier (court cards), Vincent Bermel",
+    "anglo": "Aike Reyer, Parker Coates, Vincent Bermel",
+    "anglo_poker": "Vincent Bermel, after Anglo by Aike Reyer",
+    "atlasnye": "Vincent Bermel, after the Atlasnye deck by Дмитрий Фомин (Dmitry Fomin) and Adolf Charlemagne's design",
+    "atlasnye_skat": "Vincent Bermel, after the Atlasnye deck by Дмитрий Фомин (Dmitry Fomin)",
+    "Атласные": "Vincent Bermel, after the Atlasnye deck by Дмитрий Фомин (Dmitry Fomin)",
+    "clubkarte": "Vincent Bermel",
+    "guyenne-classic": "Richard Hoelscher, Mario Frasca, Vincent Bermel",
+    "l-&-h": "Bruno Pellier (court cards), Vincent Bermel",
+    "minimum": "Vincent Bermel",
+    "minimum_dark": "Vincent Bermel",
+    "mittelalter": "Vincent Bermel",
+    "neoclassical": "Charles Esquiaqui, Vincent Bermel",
+    "neoclassical_4_color": "Charles Esquiaqui, Vincent Bermel",
+    "ornamental": "Nicu Buculei, revised by Vincent Bermel",
+    "paris": "David Bellot, Tony 52 (“linux1306”), Vincent Bermel",
+    "pixelangelo": "Heiko Eissfeldt, Michael Bischoff, Felix Bellaby, Ryu Changwoo, Markus F.X.J. Oberhumer, Vincent Bermel",
+    "pixelangelo_compact": "Vincent Bermel, after Pixelangelo",
+    "plastic": "Gifford Cheung, Vincent Bermel",
+    "simplistic": "Vincent Bermel, made with Adrian Kennard’s SVG card generator",
+    "swiss-XVII": "Richard Hoelscher, Mario Frasca",
+    "tango_nuevo": "Frederik Elwert, “Thom-10”, Vincent Bermel",
+    "tarot": "Vincent Bermel, from scans of C.L. Wüst’s Encyclopedic Tarot",
+    "tigullio": "Luciano Montanaro, Vincent Bermel",
+    "tragy": "Bruno Pellier, heraldicart.org (Matthew Simon Ryan Cavalletto), Vincent Bermel",
+    "XSkat": "Luciano Montanaro, Vincent Bermel",
+}
+EARLIER_CARDS = ("Earlier AisleRiot card designs, no longer included: Bellot by David Bellot, "
+                 "Dondorf by Richard Hoelscher, and the original Tango deck by Frederik Elwert.")
+
+
+LANGUAGES = {
+    "ab": "Abkhazian", "af": "Afrikaans", "am": "Amharic", "ar": "Arabic", "as": "Assamese",
+    "ast": "Asturian", "az": "Azerbaijani", "be": "Belarusian", "bg": "Bulgarian",
+    "bn": "Bengali", "bn_IN": "Bengali (India)", "br": "Breton", "bs": "Bosnian", "ca": "Catalan",
+    "ca@valencia": "Catalan (Valencian)", "cs": "Czech", "cy": "Welsh", "da": "Danish",
+    "de": "German", "dz": "Dzongkha", "el": "Greek", "en_CA": "English (Canada)",
+    "en_GB": "English (United Kingdom)", "en@shaw": "English (Shavian)", "eo": "Esperanto",
+    "es": "Spanish", "et": "Estonian", "eu": "Basque", "fa": "Persian", "fi": "Finnish",
+    "fr": "French", "fur": "Friulian", "ga": "Irish", "gl": "Galician", "gu": "Gujarati",
+    "he": "Hebrew", "hi": "Hindi", "hr": "Croatian", "hu": "Hungarian", "id": "Indonesian",
+    "is": "Icelandic", "it": "Italian", "ja": "Japanese", "ka": "Georgian", "kk": "Kazakh",
+    "km": "Khmer", "kn": "Kannada", "ko": "Korean", "ku": "Kurdish", "lt": "Lithuanian",
+    "lv": "Latvian", "mai": "Maithili", "mk": "Macedonian", "ml": "Malayalam", "mn": "Mongolian",
+    "mr": "Marathi", "ms": "Malay", "nb": "Norwegian Bokmål", "ne": "Nepali", "nl": "Dutch",
+    "nn": "Norwegian Nynorsk", "oc": "Occitan", "or": "Odia", "pa": "Punjabi", "pl": "Polish",
+    "pt": "Portuguese", "pt_BR": "Portuguese (Brazil)", "ro": "Romanian", "ru": "Russian",
+    "rw": "Kinyarwanda", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "sq": "Albanian",
+    "sr": "Serbian", "sr@latin": "Serbian (Latin)", "sv": "Swedish", "ta": "Tamil", "te": "Telugu",
+    "tg": "Tajik", "th": "Thai", "tr": "Turkish", "ug": "Uyghur", "uk": "Ukrainian",
+    "vi": "Vietnamese", "wa": "Walloon", "xh": "Xhosa", "zh_CN": "Chinese (China)",
+    "zh_HK": "Chinese (Hong Kong)", "zh_TW": "Chinese (Taiwan)",
+}
+
+# Lines in the translator credits that are notes to the reader, not names
+# ("send comments to", "translator credits", "visit our website", ...).
+NOT_NAMES = (
+    "Проектът за превод", "Научете повече", "Докладвайте за грешки", "如對翻譯有任何意見",
+    "以下地址", "Websted", "E-mail", "Meer info over", "Launchpad", "Skicka synpunkter",
+    "Για περισσότερες", "— превод", "— prevod", "ཨའི་ཌི་ཨར་སི", "'kenang daku", "Bandar Hilir",
+    "επισκεφθείτε", "þýðing", "Spasiya wergêran", "अनुवादक श्रेय", "Umusemuzi", "Automatski Prijevod",
+)
+
+
+def theme_name(file):
+    """theme::display_name in theme.rs."""
+    spaced = "".join(" " if c in "_-|> <" else c for c in file)
+    return " ".join(w[:1].upper() + w[1:] for w in spaced.split())
+
+
+def clean_name(text):
+    text = re.sub(r"<[^>]*>|\(?https?://\S*\)?|\([a-z0-9.-]+\.(com|org|net)\)", "", text)
+    # E-mail addresses, bare or in brackets.
+    text = re.sub(r"[(\[]?\S+@\S+[)\]]?", "", text).replace("\t", " ")
+    text = re.sub(r"\b(19|20)\d\d\b(\s*[-–,]\s*(19|20)?\d\d\b)*", "", text)
+    return text.strip(" ,.;:").strip()
+
+
+def game_programmers(game):
+    """Names on the rule file's own copyright lines (not those of a file it is based on)."""
+    names = []
+    lines = (GAMES / f"{game}.scm").read_text(errors="replace").splitlines()[:12]
+    for i, line in enumerate(lines):
+        if "based on" in line.lower() or "variation of" in line.lower():
+            break
+        m = re.match(r"\s*;+\s*Copyright\s*(?:\(C\)|©)?\s*(.*)", line)
+        if m:
+            for part in re.split(r",\s*(?=[A-Z])", m.group(1)):
+                name = clean_name(part)
+                if name and name not in names:
+                    names.append(name)
+    return names
+
+
+def translators():
+    """Language name -> translator names, from each po file's translator-credits."""
+    out = {}
+    for po in sorted((SOURCE / "po").glob("*.po")):
+        text = po.read_text(encoding="utf-8", errors="replace")
+        m = re.search(r'msgid "translator-credits"\s*\nmsgstr ((?:".*"\s*\n)+)', text)
+        if not m:
+            continue
+        credits = "".join(re.findall(r'"(.*)"', m.group(1))).replace("\\n", "\n")
+        language = LANGUAGES.get(po.stem, po.stem)
+        names = []
+        for line in credits.split("\n"):
+            if not line.strip() or re.match(r"\s*(launchpad contributions|translator-credits|contributors)", line, re.I):
+                continue
+            for part in re.split(r",", line.replace("\\t", " ")):
+                name = clean_name(part)
+                if name.startswith(NOT_NAMES):
+                    continue
+                if name and not name.startswith(("http", "www")) and name not in names and len(name) > 1:
+                    names.append(name)
+        if names:
+            out.setdefault(language, [])
+            out[language] += [n for n in names if n not in out[language]]
+    return dict(sorted(out.items(), key=lambda kv: kv[0].lower()))
+
+
+def credits_page(info):
+    known = {"Ryu Changwoo"} | {n for n, _ in PROGRAM} | set(GAME_PROGRAMMERS) | {n for n, _ in DOCUMENTATION}
+    rows = []
+    for g in info:
+        programmers = game_programmers(g["slug"])
+        known.update(programmers)
+        rows.append(f'<tr><th scope="row"><a href="#{g["slug"]}">{esc(g["title"])}</a></th>'
+                    f'<td>{esc(", ".join(programmers) or "—")}</td><td>{esc(clean_name(g["author"] or "") or "—")}</td></tr>')
+    themes = "\n".join(f'<tr><th scope="row">{esc(theme_name(t))}</th><td>{esc(who)}</td></tr>'
+                        for t, who in sorted(CARD_DESIGNS.items(), key=lambda kv: theme_name(kv[0]).lower()))
+    others = []
+    for path in (SOURCE / "AUTHORS", SOURCE / "src/AUTHORS"):
+        for line in path.read_text(errors="replace").splitlines():
+            name = clean_name(re.sub(r"\(.*?\)", "", line))
+            if name and name not in known and name not in others:
+                others.append(name)
+    langs = translators()
+    n_translators = len({n for names in langs.values() for n in names})
+    trans = "\n".join(f'<tr><th scope="row">{esc(lang)}</th><td>{esc(", ".join(names))}</td></tr>'
+                       for lang, names in langs.items())
+    people = lambda pairs: "\n".join(f"<li><strong>{esc(n)}</strong> — {esc(r)}</li>" for n, r in pairs)
+    return f"""
+<p>Rusty Solitaire is a port of <strong>GNOME AisleRiot</strong>. Its games, rules, card designs, sounds and
+manual are the work of the people below, who made AisleRiot from 1998 on. AisleRiot is
+copyright © 1998–2006 Jonathan Blandford and © 2007–2015 Christian Persch, and its games are copyright
+their authors.</p>
+<section id="credits--program">
+<h2>The program</h2>
+<ul>
+{people(PROGRAM)}
+</ul>
+</section>
+<section id="credits--games">
+<h2>The games</h2>
+<p>The rules of each game are a small program in Scheme, which Rusty Solitaire still runs as written.
+Programmed for AisleRiot by {esc(", ".join(GAME_PROGRAMMERS[:-1]))} and {esc(GAME_PROGRAMMERS[-1])},
+among others. Each game's rule file and its page in the manual:</p>
+<table class="setup credits">
+<tr><th scope="col">Game</th><th scope="col">Rule file by</th><th scope="col">Rules page written by</th></tr>
+{chr(10).join(rows)}
+</table>
+</section>
+<section id="credits--manual">
+<h2>The manual</h2>
+<ul>
+{people(DOCUMENTATION)}
+</ul>
+<p>The game pages in this help are that manual, under the <a href="#license">GNU Free Documentation License</a>.</p>
+</section>
+<section id="credits--cards">
+<h2>Card designs</h2>
+<table class="setup">
+{themes}
+</table>
+<p>{esc(EARLIER_CARDS)}</p>
+</section>
+<section id="credits--others">
+<h2>Other contributors</h2>
+<p>Also named in AisleRiot's list of authors, for code, fixes and ideas over the years:</p>
+<p>{esc(", ".join(others))}.</p>
+</section>
+<section id="credits--translators">
+<h2>Translators</h2>
+<p>AisleRiot was translated into {len(langs)} languages by {n_translators} people. Rusty Solitaire is in
+English only for now, but their work is part of AisleRiot:</p>
+<table class="setup">
+{trans}
+</table>
+</section>
 """
 
 
@@ -382,7 +605,7 @@ def main():
 </section>""",
         side='<nav class="toc"><a href="#index--playing">Playing</a><a href="#index--statistics">Statistics</a>'
              '<a href="#index--sound">Sound</a><a href="#index--games">The games</a>'
-             '<a href="#keyboard">Keyboard</a><a href="#glossary">Glossary</a></nav>'))
+             '<a href="#keyboard">Keyboard</a><a href="#glossary">Glossary</a><a href="#credits">Credits</a></nav>'))
 
     pages.append(page("keyboard", "Keyboard", "<h1>Keyboard</h1><p>Play without a mouse.</p>", KEYBOARD))
 
@@ -412,6 +635,14 @@ def main():
                       render.children(glossary)))
 
     pages.append(page(
+        "credits", "Credits",
+        "<h1>Credits</h1><p>The people who made GNOME AisleRiot, and what they did.</p>",
+        credits_page(info),
+        side='<nav class="toc"><a href="#credits--program">The program</a><a href="#credits--games">The games</a>'
+             '<a href="#credits--manual">The manual</a><a href="#credits--cards">Card designs</a>'
+             '<a href="#credits--others">Other contributors</a><a href="#credits--translators">Translators</a></nav>'))
+
+    pages.append(page(
         "license", "Documentation license", "<h1>Documentation license</h1>",
         '<p>The game rules come from the GNOME AisleRiot manual, under the GNU Free Documentation License, '
         'version 1.1 or later:</p>\n'
@@ -428,13 +659,13 @@ def main():
 <body data-start="@START@">
 <header class="topbar"><div class="wrap">
 <strong>Rusty Solitaire Help</strong>
-<a href="#index">Contents</a><a href="#index--games">Games</a><a href="#keyboard">Keyboard</a><a href="#glossary">Glossary</a>
+<a href="#index">Contents</a><a href="#index--games">Games</a><a href="#keyboard">Keyboard</a><a href="#glossary">Glossary</a><a href="#credits">Credits</a>
 </div></header>
 <main>
 {chr(10).join(pages)}
 </main>
 <footer><div class="wrap">Rusty Solitaire © 2026 The Rusty Solitaire authors · GPL-3.0-or-later.
-Game rules from the GNOME AisleRiot manual, under the <a href="#license">GNU Free Documentation License</a>.</div></footer>
+Based on <a href="#credits">GNOME AisleRiot</a>; game rules from its manual, under the <a href="#license">GNU Free Documentation License</a>.</div></footer>
 <script>{SCRIPT}</script>
 </body>
 </html>

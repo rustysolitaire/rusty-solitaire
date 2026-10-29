@@ -20,7 +20,7 @@ that looks like the GTK 3 original on Linux, Windows and macOS. The UI uses
 | Help → Contents / Help on *game*: the rules of every game, opened in the web browser | |
 | GTK 3 / Adwaita menu bar, menus, toolbar and status bar | |
 | All 26 card themes (View → Card Style), saved settings | |
-| Packages: Windows MSI (x64, ARM64), Linux Flatpak, .deb and .rpm (x86_64, ARM64), macOS universal .dmg | |
+| Packages: Windows MSI (x64, ARM64), Linux Flatpak, .deb and .rpm (x86_64, ARM64), macOS .dmg (universal, Apple Silicon, Intel) | |
 
 ## Versions
 
@@ -52,13 +52,21 @@ packages. On Fedora: `sudo dnf install gcc fontconfig-devel libxkbcommon-devel`.
 packaging/macos/build-mac.sh [user@mac]
 ```
 
-builds `dist/Rusty-Solitaire-<version>-macos-universal.dmg` on a Mac over SSH (default
-host: `$MAC_HOST`, else `MAC_HOST=user@mac` in `packaging/macos/local.env`, which is not
-committed). The Mac needs Remote Login with this
+builds three disk images in `dist/` on a Mac over SSH:
+
+| File | For |
+|---|---|
+| `Rusty-Solitaire-<version>-macos-universal.dmg` | Any Mac (both programs in one) |
+| `Rusty-Solitaire-<version>-macos-apple-silicon.dmg` | Apple Silicon (M1 and later), smaller |
+| `Rusty-Solitaire-<version>-macos-intel.dmg` | Intel Macs, smaller |
+
+The Mac is the default host `$MAC_HOST`, else `MAC_HOST=user@mac` in
+`packaging/macos/local.env`, which is not committed. It needs Remote Login with this
 machine's SSH key, Apple's command-line tools (`xcode-select --install`) and Rust. The
 script copies the source to `~/rusty-solitaire-build` on the Mac, builds both chip types,
-joins them with `lipo`, makes `Rusty Solitaire.app` (icon, version, copyright), signs it
-ad hoc and wraps it in a drag-to-Applications disk image, which it copies back.
+joins them with `lipo` for the universal one, makes `Rusty Solitaire.app` (icon, version,
+copyright), signs it ad hoc and wraps it in a drag-to-Applications disk image, and copies
+the images back.
 
 The app is signed but not notarized, so the first time macOS blocks it: right-click the
 app → **Open** (or System Settings → Privacy & Security → **Open Anyway**). An Apple

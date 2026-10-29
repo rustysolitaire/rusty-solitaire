@@ -70,6 +70,8 @@ kbd { display: inline-block; font: .85em ui-monospace, "SF Mono", "Cascadia Mono
 .pager a { text-decoration: none; }
 .pager span { display: block; font-size: .8rem; color: var(--ink-soft); }
 .pager a:last-child { text-align: right; }
+.credits th { width: auto; }
+.credits th[scope="col"] { background: var(--paper-alt); }
 .license { white-space: pre-wrap; font: .85rem/1.5 ui-monospace, "DejaVu Sans Mono", monospace; }
 footer { border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .88rem; padding: 18px 0 28px; }
 </style>
@@ -77,7 +79,7 @@ footer { border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .
 <body data-start="@START@">
 <header class="topbar"><div class="wrap">
 <strong>Rusty Solitaire Help</strong>
-<a href="#index">Contents</a><a href="#index--games">Games</a><a href="#keyboard">Keyboard</a><a href="#glossary">Glossary</a>
+<a href="#index">Contents</a><a href="#index--games">Games</a><a href="#keyboard">Keyboard</a><a href="#glossary">Glossary</a><a href="#credits">Credits</a>
 </div></header>
 <main>
 <div class="page" id="index" data-title="Contents">
@@ -209,7 +211,7 @@ running out of moves. Turn them off or on with <em>Control → Sound</em>.</p>
 <li data-name="zebra"><a href="#zebra"><strong>Zebra</strong><span>Move all cards on to Foundation piles.</span></a></li>
 </ul>
 </section>
-</article><aside><nav class="toc"><a href="#index--playing">Playing</a><a href="#index--statistics">Statistics</a><a href="#index--sound">Sound</a><a href="#index--games">The games</a><a href="#keyboard">Keyboard</a><a href="#glossary">Glossary</a></nav></aside></div>
+</article><aside><nav class="toc"><a href="#index--playing">Playing</a><a href="#index--statistics">Statistics</a><a href="#index--sound">Sound</a><a href="#index--games">The games</a><a href="#keyboard">Keyboard</a><a href="#glossary">Glossary</a><a href="#credits">Credits</a></nav></aside></div>
 
 </div>
 <div class="page" id="keyboard" data-title="Keyboard">
@@ -3799,6 +3801,265 @@ cards on top of it, move the focus to the pile they should go to and press <kbd>
 </article></div>
 
 </div>
+<div class="page" id="credits" data-title="Credits">
+<div class="hero"><div class="wrap"><h1>Credits</h1><p>The people who made GNOME AisleRiot, and what they did.</p></div></div>
+<div class="wrap layout"><article class="rules">
+
+<p>Rusty Solitaire is a port of <strong>GNOME AisleRiot</strong>. Its games, rules, card designs, sounds and
+manual are the work of the people below, who made AisleRiot from 1998 on. AisleRiot is
+copyright © 1998–2006 Jonathan Blandford and © 2007–2015 Christian Persch, and its games are copyright
+their authors.</p>
+<section id="credits--program">
+<h2>The program</h2>
+<ul>
+<li><strong>Jonathan Blandford</strong> — Wrote AisleRiot (as GNOME Solitaire), 1998–2006</li>
+<li><strong>Felix Bellaby</strong> — Program and card drawing</li>
+<li><strong>Rosanna Yuen</strong> — Program, most of the games and the manual</li>
+<li><strong>Callum McKenzie</strong> — Program, maintainer of GNOME Games</li>
+<li><strong>Christian Persch</strong> — Program and maintainer from 2007, GTK 3 port</li>
+<li><strong>Andreas Røsdal</strong> — Program</li>
+</ul>
+</section>
+<section id="credits--games">
+<h2>The games</h2>
+<p>The rules of each game are a small program in Scheme, which Rusty Solitaire still runs as written.
+Programmed for AisleRiot by Jonathan Blandford, W. Borgert, Robert Brady, Nick Lamb, Changwoo Ryu, Matthew Wilcox, Rosanna Yuen, Alan Horkan, Richard Hoelscher, Vincent Povirk, Sapphire Becker and Gwyneth Morgan,
+among others. Each game's rule file and its page in the manual:</p>
+<table class="setup credits">
+<tr><th scope="col">Game</th><th scope="col">Rule file by</th><th scope="col">Rules page written by</th></tr>
+<tr><th scope="row"><a href="#accordion">Accordion</a></th><td>Ed Sirett</td><td>Ed Sirett</td></tr>
+<tr><th scope="row"><a href="#agnes">Agnes</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#athena">Athena</a></th><td>Alan Horkan</td><td>Alan Horkan, based on work by Jonathan Blandford</td></tr>
+<tr><th scope="row"><a href="#auld-lang-syne">Auld Lang Syne</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#aunt-mary">Aunt Mary</a></th><td>Alan Horkan</td><td>—</td></tr>
+<tr><th scope="row"><a href="#australian-patience">Australian Patience</a></th><td>Gwyneth Morgan</td><td>—</td></tr>
+<tr><th scope="row"><a href="#backbone">Backbone</a></th><td>Jonathan Blandford</td><td>Vincent Povirk</td></tr>
+<tr><th scope="row"><a href="#bakers-dozen">Bakers Dozen</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#bakers-game">Bakers Game</a></th><td>Vincent Povirk</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#bear-river">Bear River</a></th><td>Vincent Povirk</td><td>Bruce and Joel Levin</td></tr>
+<tr><th scope="row"><a href="#beleaguered-castle">Beleaguered Castle</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#block-ten">Block Ten</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#bristol">Bristol</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#camelot">Camelot</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#canfield">Canfield</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#carpet">Carpet</a></th><td>Vincent Povirk</td><td>Vincent Povirk</td></tr>
+<tr><th scope="row"><a href="#chessboard">Chessboard</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#clock">Clock</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#cover">Cover</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#cruel">Cruel</a></th><td>Zach Keene</td><td>Zach Keene</td></tr>
+<tr><th scope="row"><a href="#diamond-mine">Diamond Mine</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#doublets">Doublets</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#eagle-wing">Eagle Wing</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#easthaven">Easthaven</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#eight-off">Eight Off</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#elevator">Elevator</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#eliminator">Eliminator</a></th><td>Sapphire Becker</td><td>Wa</td></tr>
+<tr><th scope="row"><a href="#escalator">Escalator</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#first-law">First Law</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#fortress">Fortress</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#fortunes">Fortunes</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#forty-thieves">Forty Thieves</a></th><td>Ed Sirett</td><td>Ed Sirett</td></tr>
+<tr><th scope="row"><a href="#fourteen">Fourteen</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#freecell">Freecell</a></th><td>Changwoo Ryu</td><td>Changwoo Ryu</td></tr>
+<tr><th scope="row"><a href="#gaps">Gaps</a></th><td>Zach Keene</td><td>Zach Keene</td></tr>
+<tr><th scope="row"><a href="#gay-gordons">Gay Gordons</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#giant">Giant</a></th><td>Ed Sirett</td><td>Ed Sirett</td></tr>
+<tr><th scope="row"><a href="#glenwood">Glenwood</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#gold-mine">Gold Mine</a></th><td>Jonathan Blandford</td><td>—</td></tr>
+<tr><th scope="row"><a href="#golf">Golf</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#gypsy">Gypsy</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#hamilton">Hamilton</a></th><td>Timothy Goodwin</td><td>Timothy Goodwin</td></tr>
+<tr><th scope="row"><a href="#helsinki">Helsinki</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#hopscotch">Hopscotch</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#isabel">Isabel</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#jamestown">Jamestown</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#jumbo">Jumbo</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#kansas">Kansas</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#king-albert">King Albert</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#kings-audience">King&#x27;s Audience</a></th><td>Zach Keene</td><td>Zach Keene</td></tr>
+<tr><th scope="row"><a href="#klondike">Klondike</a></th><td>Jonathan Blandford</td><td>Jonathan Blandford</td></tr>
+<tr><th scope="row"><a href="#labyrinth">Labyrinth</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#lady-jane">Lady Jane</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#maze">Maze</a></th><td>Matthew Wilcox</td><td>Matthew Wilcox</td></tr>
+<tr><th scope="row"><a href="#monte-carlo">Monte Carlo</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#napoleons-tomb">Napoleon&#x27;s Tomb</a></th><td>Kimmo Karlsson</td><td>Kimmo Karlsson</td></tr>
+<tr><th scope="row"><a href="#neighbor">Neighbor</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#odessa">Odessa</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#osmosis">Osmosis</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#peek">Peek</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#pileon">Pileon</a></th><td>Nick Lamb</td><td>Nick Lamb</td></tr>
+<tr><th scope="row"><a href="#plait">Plait</a></th><td>W. Borgert</td><td>W. Borgert</td></tr>
+<tr><th scope="row"><a href="#poker">Poker</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#quatorze">Quatorze</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#royal-east">Royal East</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#saratoga">Saratoga</a></th><td>Alan Horkan</td><td>Alan Horkan, based on work by Jonathan Blandford</td></tr>
+<tr><th scope="row"><a href="#scorpion">Scorpion</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#scuffle">Scuffle</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#seahaven">Seahaven</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#sir-tommy">Sir Tommy</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#spider">Spider</a></th><td>Jonathan Blandford</td><td>Jonathan Blandford</td></tr>
+<tr><th scope="row"><a href="#spider-three-decks">Spider Three Decks</a></th><td>Daniel Werner</td><td>—</td></tr>
+<tr><th scope="row"><a href="#spiderette">Spiderette</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#straight-up">Straight Up</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#streets-and-alleys">Streets and Alleys</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#ten-across">Ten Across</a></th><td>Jonathan Blandford, James LewisMoss</td><td>James LewisMoss</td></tr>
+<tr><th scope="row"><a href="#terrace">Terrace</a></th><td>Vincent Povirk</td><td>David Rogers</td></tr>
+<tr><th scope="row"><a href="#thieves">Thieves</a></th><td>Robert Brady</td><td>Robert Brady</td></tr>
+<tr><th scope="row"><a href="#thirteen">Thirteen</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#thumb-and-pouch">Thumb and Pouch</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#treize">Treize</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#triple-peaks">Triple Peaks</a></th><td>Richard Hoelscher</td><td>Richard Hoelscher</td></tr>
+<tr><th scope="row"><a href="#union-square">Union Square</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#valentine">Valentine</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#wall">Wall</a></th><td>Otto Wallenius, Markus Tuhkanen</td><td>—</td></tr>
+<tr><th scope="row"><a href="#westhaven">Westhaven</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#whitehead">Whitehead</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#will-o-the-wisp">Will o&#x27; the Wisp</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#yield">Yield</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#yukon">Yukon</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+<tr><th scope="row"><a href="#zebra">Zebra</a></th><td>Rosanna Yuen</td><td>Rosanna Yuen</td></tr>
+</table>
+</section>
+<section id="credits--manual">
+<h2>The manual</h2>
+<ul>
+<li><strong>Rosanna Yuen</strong> — Wrote and maintained the manual</li>
+<li><strong>Telsa Gwynne</strong> — Additional material for the manual</li>
+</ul>
+<p>The game pages in this help are that manual, under the <a href="#license">GNU Free Documentation License</a>.</p>
+</section>
+<section id="credits--cards">
+<h2>Card designs</h2>
+<table class="setup">
+<tr><th scope="row">Adler</th><td>Bruno Pellier (court cards), Vincent Bermel</td></tr>
+<tr><th scope="row">Anglo</th><td>Aike Reyer, Parker Coates, Vincent Bermel</td></tr>
+<tr><th scope="row">Anglo Poker</th><td>Vincent Bermel, after Anglo by Aike Reyer</td></tr>
+<tr><th scope="row">Atlasnye</th><td>Vincent Bermel, after the Atlasnye deck by Дмитрий Фомин (Dmitry Fomin) and Adolf Charlemagne&#x27;s design</td></tr>
+<tr><th scope="row">Atlasnye Skat</th><td>Vincent Bermel, after the Atlasnye deck by Дмитрий Фомин (Dmitry Fomin)</td></tr>
+<tr><th scope="row">Clubkarte</th><td>Vincent Bermel</td></tr>
+<tr><th scope="row">Guyenne Classic</th><td>Richard Hoelscher, Mario Frasca, Vincent Bermel</td></tr>
+<tr><th scope="row">L &amp; H</th><td>Bruno Pellier (court cards), Vincent Bermel</td></tr>
+<tr><th scope="row">Minimum</th><td>Vincent Bermel</td></tr>
+<tr><th scope="row">Minimum Dark</th><td>Vincent Bermel</td></tr>
+<tr><th scope="row">Mittelalter</th><td>Vincent Bermel</td></tr>
+<tr><th scope="row">Neoclassical</th><td>Charles Esquiaqui, Vincent Bermel</td></tr>
+<tr><th scope="row">Neoclassical 4 Color</th><td>Charles Esquiaqui, Vincent Bermel</td></tr>
+<tr><th scope="row">Ornamental</th><td>Nicu Buculei, revised by Vincent Bermel</td></tr>
+<tr><th scope="row">Paris</th><td>David Bellot, Tony 52 (“linux1306”), Vincent Bermel</td></tr>
+<tr><th scope="row">Pixelangelo</th><td>Heiko Eissfeldt, Michael Bischoff, Felix Bellaby, Ryu Changwoo, Markus F.X.J. Oberhumer, Vincent Bermel</td></tr>
+<tr><th scope="row">Pixelangelo Compact</th><td>Vincent Bermel, after Pixelangelo</td></tr>
+<tr><th scope="row">Plastic</th><td>Gifford Cheung, Vincent Bermel</td></tr>
+<tr><th scope="row">Simplistic</th><td>Vincent Bermel, made with Adrian Kennard’s SVG card generator</td></tr>
+<tr><th scope="row">Swiss XVII</th><td>Richard Hoelscher, Mario Frasca</td></tr>
+<tr><th scope="row">Tango Nuevo</th><td>Frederik Elwert, “Thom-10”, Vincent Bermel</td></tr>
+<tr><th scope="row">Tarot</th><td>Vincent Bermel, from scans of C.L. Wüst’s Encyclopedic Tarot</td></tr>
+<tr><th scope="row">Tigullio</th><td>Luciano Montanaro, Vincent Bermel</td></tr>
+<tr><th scope="row">Tragy</th><td>Bruno Pellier, heraldicart.org (Matthew Simon Ryan Cavalletto), Vincent Bermel</td></tr>
+<tr><th scope="row">XSkat</th><td>Luciano Montanaro, Vincent Bermel</td></tr>
+<tr><th scope="row">Атласные</th><td>Vincent Bermel, after the Atlasnye deck by Дмитрий Фомин (Dmitry Fomin)</td></tr>
+</table>
+<p>Earlier AisleRiot card designs, no longer included: Bellot by David Bellot, Dondorf by Richard Hoelscher, and the original Tango deck by Frederik Elwert.</p>
+</section>
+<section id="credits--others">
+<h2>Other contributors</h2>
+<p>Also named in AisleRiot's list of authors, for code, fixes and ideas over the years:</p>
+<p>Ian Peters, Sean MacIsaac, Mark Rae, Carsten Schaar, J. Marcin Gorycki, Pista, Lars Rydlinge, Scott Heavner, Francisco Bustamante, Michael Meeks, Christopher James Lahey, Alan Cox, James Henstridge, Szabolcs Ban, Robert Szokovacs, Jason Clinton, Robert Ancell, Thomas Hinkle, Thomas Andersen, Stephen Brandt, Daniel Derozier, Danny Varner.</p>
+</section>
+<section id="credits--translators">
+<h2>Translators</h2>
+<p>AisleRiot was translated into 84 languages by 366 people. Rusty Solitaire is in
+English only for now, but their work is part of AisleRiot:</p>
+<table class="setup">
+<tr><th scope="row">Abkhazian</th><td>Нанба Наала</td></tr>
+<tr><th scope="row">Afrikaans</th><td>Samuel Murray, Hermien Bos, Friedel Wolff</td></tr>
+<tr><th scope="row">Albanian</th><td>Elian Myftiu</td></tr>
+<tr><th scope="row">Amharic</th><td>ዘግዕዝ Frontier Foundation</td></tr>
+<tr><th scope="row">Arabic</th><td>عرفات المديني، تونس, سيّد جعفر الموسوي، البحرين, فريق عرب آيز للترجمة, عصام بايزيدي, حسن عابدين, عبدالعزيز العرفجة, جهاد عفيفي, خالد حسني, أحمد فرغل, أنس الحسيني, عبد المنعم كوكة, أنس عفيف عماد</td></tr>
+<tr><th scope="row">Assamese</th><td>অমিতাক্ষ ফুকন, নীলমদ্যুতি গোস্বামী</td></tr>
+<tr><th scope="row">Asturian</th><td>Iñigo Varela, Marcos, Xandru, Xandru Martino, Xuacu Saturio</td></tr>
+<tr><th scope="row">Azerbaijani</th><td>Ramal Rəhimov</td></tr>
+<tr><th scope="row">Basque</th><td>Asier Sarasua Garmendia</td></tr>
+<tr><th scope="row">Belarusian</th><td>Ales Nyakhaychyk, Ihar Hrachyshka, Юрась Шумовіч</td></tr>
+<tr><th scope="row">Bengali</th><td>অঙ্কুর প্রকল্পের পক্ষে, প্রজ্ঞা, রুণা ভট্টাচার্য, ইসরাত জাহান, সাদিয়া আফরোজ</td></tr>
+<tr><th scope="row">Bengali (India)</th><td>অঙ্কুর প্রকল্পের পক্ষে, প্রজ্ঞা  রুণা ভট্টাচার্য</td></tr>
+<tr><th scope="row">Bosnian</th><td>Samir Ribić</td></tr>
+<tr><th scope="row">Breton</th><td>Denis, Ronan Le Déroff</td></tr>
+<tr><th scope="row">Bulgarian</th><td>Ростислав „zbrox“ Райков, Евгени Боевски, Александър Шопов, Красимир „bfaf“ Чонов, twlvnn kraftwerk</td></tr>
+<tr><th scope="row">Catalan</th><td>Jordi Vila, Jordi Mallach, Xavier Conde, Jesús Corrius, Josep Puigdemont, Miquel-Àngel Burgos i Fradeja, Victor Dargallo</td></tr>
+<tr><th scope="row">Catalan (Valencian)</th><td>Jordi Vila, Jordi Mallach, Xavier Conde, Jesús Corrius, Josep Puigdemont</td></tr>
+<tr><th scope="row">Chinese (China)</th><td>Yang Zhang, Ping Z, Xhacker Liu, YunQiang Su, Sphinx Jiang, Weiyi Xu, lumingzh</td></tr>
+<tr><th scope="row">Chinese (Hong Kong)</th><td>Abel Cheung, Fernando</td></tr>
+<tr><th scope="row">Chinese (Taiwan)</th><td>Abel Cheung, Fernando</td></tr>
+<tr><th scope="row">Croatian</th><td>Antun Krasic, Danijel Studen, Davorin Vlahovic, Denis Lackovic, Ivan Knežević, Mato Kutlić, Nikola Planinac, Robert Sedak, Sasa Poznanovic, Tomislav Cavrag, Vedran Vyroubal, gogo</td></tr>
+<tr><th scope="row">Czech</th><td>Jirka Lébl, Michal Bukovjan, Miloslav Trmač, Petr Tomeš, Lukáš Novotný, Jakub Friedl, Jan Parkman, Petr Kovář, Lucas Lommer, Kamil Páral, Marek Lisý, Petr Pulc, Marek Černocký</td></tr>
+<tr><th scope="row">Danish</th><td>Anders Wegge Jakobsen, Keld Simonsen, Kenneth Christiansen, Martin Willemoes Hansen, Ole Laursen, Ask Hjorth Larsen, Joe Hansen, Dansk-gruppen</td></tr>
+<tr><th scope="row">Dutch</th><td>Tino Meinen, Hein-Jan Leliveld, Almer S. Tigelaar, Taco Witte, Erik Kruijswijk, Justin van Steijn, Hannie Dumoleyn, Nathan Follens, Fabian Bakkum, Pjotr12345</td></tr>
+<tr><th scope="row">English (Canada)</th><td>Adam Weinberger, Tiffany Antopolski</td></tr>
+<tr><th scope="row">English (Shavian)</th><td>·𐑑𐑪𐑥𐑩𐑕 ·𐑔𐑻𐑥𐑩𐑯</td></tr>
+<tr><th scope="row">English (United Kingdom)</th><td>Robert Brady, Bastien Nocera, Ross Burton, Gareth Owen, David Lodge, Philip Withnall, Bruce Cowan, David King, Zander Brown</td></tr>
+<tr><th scope="row">Esperanto</th><td>Kristjan SCHMIDT, Tiffany ANTOPOLSKI, Carmen Bianca BAKKER</td></tr>
+<tr><th scope="row">Estonian</th><td>Lauris Kaplinski, Tõivo Leedjärv, Ilmar Kerm, Ivar Smolin</td></tr>
+<tr><th scope="row">Finnish</th><td>Jiri Grönroos, Timo Jyrinki, Ilkka Tuohela, Sami Pesonen, Heikki Kulhia, Jukka, Jussi Aalto, Markku Borén, Matti Karnaattu, Saku Laukkanen, eGetin</td></tr>
+<tr><th scope="row">French</th><td>Christophe Merlet, Guy Daniel Clotilde, Sébastien Bacher, Vincent Carriere, Christophe Bliard, Xavier Claessens, Jonathan Ernst, Claude Paroz, Stéphane Raimbault, Didier Vidal, Pierre Lemaire, Guillaume Bernard</td></tr>
+<tr><th scope="row">Friulian</th><td>Fabio Tomat</td></tr>
+<tr><th scope="row">Galician</th><td>Fran Diéguez, Leandro Regueiro, Suso Baleato, Antón Méixome, Ignacio Casal Quinteiro, Jesús Bravo Álvarez</td></tr>
+<tr><th scope="row">Georgian</th><td>თემური დოღონაძე</td></tr>
+<tr><th scope="row">German</th><td>Karl Eichwalder, Christian Meyer, Christian Neumair, Carsten Schaar, Matthias Warkus, Frank Arnold, Manuel Borchers, Hendrik Richter, Benedikt Wicklein, Philipp Kerling, Björn Deiseroth, Andre Klapper, Mario Blättermann, Christian Kirbach, Bernd Homuth, Tim Sabsch</td></tr>
+<tr><th scope="row">Greek</th><td>Ελληνική μεταφραστική ομάδα GNOME, Δημήτρης Σπίγγος, Σπύρος Παπαδημητρίου, Συμεών (Σίμος) Ξενιτέλλης, Κώστας Παπαδήμας, Τζένη Πετούμενου, Μαρία Μαυρίδου, Ευστάθιος Ιωσηφίδης</td></tr>
+<tr><th scope="row">Gujarati</th><td>અંકિત પટેલ, શ્ર્વેતા કોઠારી</td></tr>
+<tr><th scope="row">Hebrew</th><td>גיל אשר, יאיר הרשקוביץ, ‏Hezy Amiel, ‏Revan, ‏Yaniv Abir, ‏dod_basim, ירון שהרבני, פרויקט תרגום GNOME לעברית</td></tr>
+<tr><th scope="row">Hindi</th><td>रविशंकर श्रीवास्तव, राजेश रंजन, Scrambled777</td></tr>
+<tr><th scope="row">Hungarian</th><td>Bán Szabolcs, Dvornik László, Kelemen Gábor, Kovács Emese, Nagy Gergely, Tímár András, Varga Szabolcs</td></tr>
+<tr><th scope="row">Indonesian</th><td>Mohammad DAMT, Ahmad Riza H Nst, Bonaventura Aditya, Dirgita, Andika Triwidada, Kukuh Syafaat</td></tr>
+<tr><th scope="row">Irish</th><td>Alastair McKinstry, Paul Duffy, Alan Horkan, Seán de Búrca</td></tr>
+<tr><th scope="row">Italian</th><td>Milo Casagrande, Gruppo traduzione Italiano di Ubuntu, Francesco Marletta, Fabrizio Stefani</td></tr>
+<tr><th scope="row">Japanese</th><td>相花 毅, 草野 貴之, 佐藤 暁, 日本 GNOME ユーザー会, Akira Higuchi, KAMAGASAKO Masatoshi, Nishio Futoshi, sicklylife, Yukihiro Nakai, Yuusuke Tahara</td></tr>
+<tr><th scope="row">Kannada</th><td>ಶಂಕರ್ ಪ್ರಸಾದ್ ಎಂ. ವಿ</td></tr>
+<tr><th scope="row">Kazakh</th><td>Baurzhan Muftakhidinov</td></tr>
+<tr><th scope="row">Khmer</th><td>ខឹម សុខែម, ម៉ន ម៉េត, សេង សុត្ថា, ចាន់ សម្បត្តិរតនៈ, សុខ សុភា</td></tr>
+<tr><th scope="row">Korean</th><td>류창우, 백관선, 조성호</td></tr>
+<tr><th scope="row">Latvian</th><td>Raivis Dejus, Sandra Zabarovska, Rūdolfs Mazurs</td></tr>
+<tr><th scope="row">Lithuanian</th><td>Žygimantas Beručka, Justina Klingaitė, Tomas Kuliavas, Gediminas Paulauskas, Aurimas Černius</td></tr>
+<tr><th scope="row">Macedonian</th><td>Иван Стојмиров, Новица Наков, Арангел Ангов</td></tr>
+<tr><th scope="row">Maithili</th><td>संगीता कुमारी</td></tr>
+<tr><th scope="row">Malay</th><td>abuyop, Noor Azurah Anuar</td></tr>
+<tr><th scope="row">Malayalam</th><td>എഫ്.എസ്.എഫ് - ഇന്ത്യ, അനി പീറ്റര്‍, അഭിഷേക് ജേക്കബ്, ബാലശങ്കർ സി</td></tr>
+<tr><th scope="row">Marathi</th><td>समीर इंगोले, संदिप शेडमाके</td></tr>
+<tr><th scope="row">Mongolian</th><td>Санлигийн Бадрал, Самбуу</td></tr>
+<tr><th scope="row">Norwegian Bokmål</th><td>Kjartan Maraas, Espen Stefansen, Torstein Adolf Winterseth</td></tr>
+<tr><th scope="row">Norwegian Nynorsk</th><td>Åsmund Skjæveland, Gaute Hvoslef Kvalnes, Kjartan Maraas, Eskild Hustvedt, Torstein Adolf Winterseth, Svein Høgemo</td></tr>
+<tr><th scope="row">Occitan</th><td>Associacion Tot En Òc (www.totenoc.eu), Cédric VALMARY (Tot en òc), Yannig MARCHEGAY (Kokoyaya)</td></tr>
+<tr><th scope="row">Odia</th><td>ଶୁଭ୍ରାଂଶୁ ବେହେରା</td></tr>
+<tr><th scope="row">Persian</th><td>آرش موسوی, دانیاا بهزادی, روزبه پورنادر, بهداد پورنادر, الناز سربر, میلاد زکریا</td></tr>
+<tr><th scope="row">Polish</th><td>Zbigniew Chyla, Marcin Gorycki, Tomasz Kłoczko, Artur Flinta, Bartosz Kosiorek, Michał Bentkowski, Andrzej Polatyński, Wadim Dziedzic, Tomasz Dominikowski, Joanna Mazgaj, Wojciech Kapusta, Piotr Drąg, Aviary.pl</td></tr>
+<tr><th scope="row">Portuguese</th><td>Duarte Loreto, Hugo Carvalho, Juliano de Souza Camargo, Pedro Albuquerque</td></tr>
+<tr><th scope="row">Portuguese (Brazil)</th><td>Sandro Nunes Henrique, Cândida Nunes da Silva, Gustavo Noronha Silva, Alexandre Folle de Menezes, Maurício de Lemos Rodrigues Collares Neto, Welther José O. Esteves, Raphael Higino, Og Maciel, Andre Noel, Vladimir Melo, Daniel S. Koda, Felipe Borges, Sérgio Cipolla, Rodrigo Padula de Oliveira, Gabriel Speckhahn, Antonio Fernandes C. Neto, Rafael Fontenelle, Jhonata Fernandes</td></tr>
+<tr><th scope="row">Punjabi</th><td>ਜਸਵਿੰਦਰ ਸਿੰਘ ਫੂਲੇਵਾਲਾ, ਅਮਨਪਰੀਤ ਸਿੰਘ ਆਲਮਵਾਲਾ</td></tr>
+<tr><th scope="row">Romanian</th><td>Maruta Catalin Ionut, Florentina Mușat</td></tr>
+<tr><th scope="row">Russian</th><td>Станислав Соловей, Юрий Мясоедов, Alexey Rubtsov</td></tr>
+<tr><th scope="row">Serbian</th><td>Душан Марјановић, Милош Поповић, Бранко Кокановић, Мирослав Николић, Марко М. Костић (Marko M. Kostić)</td></tr>
+<tr><th scope="row">Serbian (Latin)</th><td>Dušan Marjanović, Miloš Popović, Branko Kokanović, Miroslav Nikolić, Marko M. Kostić (Marko M. Kostić)</td></tr>
+<tr><th scope="row">Sinhala</th><td>Danishka</td></tr>
+<tr><th scope="row">Slovak</th><td>Stanislav Višňovský, Marcel Telka, Peter Mráz, Ján Kyselica, Dušan Kazik</td></tr>
+<tr><th scope="row">Slovenian</th><td>Matej Urbančič, Matic Žgur, Matej Erman, Tadej Janež, Martin Srebotnjak</td></tr>
+<tr><th scope="row">Spanish</th><td>Daniel Mustieles, Jorge González, Lucas Vieites, Germán Poo Caamaño, Pablo Saratxaga</td></tr>
+<tr><th scope="row">Swedish</th><td>Daniel Nylander, Christian Rose, Martin Norbäck, Andreas Hydén, Andreas Persenius, Anders Jonsson</td></tr>
+<tr><th scope="row">Tamil</th><td>Zhakanini, Jayaradha N, Felix, drtvasudevan</td></tr>
+<tr><th scope="row">Telugu</th><td>Bharat Kumar Jonnalagadda</td></tr>
+<tr><th scope="row">Thai</th><td>Theppitak Karoonboonyanan, Supranee Thirawatthanasuk, Kitt Tientanopajai</td></tr>
+<tr><th scope="row">Turkish</th><td>Barış Çiçek</td></tr>
+<tr><th scope="row">Ukrainian</th><td>Юрій Сирота, Максим Дзюманенко, Wanderlust, Daniel Korostil</td></tr>
+<tr><th scope="row">Uyghur</th><td>Gheyret Kenji, Sahran, Muhemmed Erdem</td></tr>
+<tr><th scope="row">Vietnamese</th><td>Nhóm Việt hóa GNOME</td></tr>
+<tr><th scope="row">Walloon</th><td>Pablo Saratxaga, Lorint Hendschel</td></tr>
+<tr><th scope="row">Welsh</th><td>Dafydd Harries, Telsa Gwynne, Rhys Jones</td></tr>
+<tr><th scope="row">Xhosa</th><td>Canonical Ltd</td></tr>
+</table>
+</section>
+
+</article><aside><nav class="toc"><a href="#credits--program">The program</a><a href="#credits--games">The games</a><a href="#credits--manual">The manual</a><a href="#credits--cards">Card designs</a><a href="#credits--others">Other contributors</a><a href="#credits--translators">Translators</a></nav></aside></div>
+
+</div>
 <div class="page" id="license" data-title="Documentation license">
 <div class="hero"><div class="wrap"><h1>Documentation license</h1></div></div>
 <div class="wrap layout"><article class="rules">
@@ -4164,7 +4425,7 @@ to permit their use in free software.
 </div>
 </main>
 <footer><div class="wrap">Rusty Solitaire © 2026 The Rusty Solitaire authors · GPL-3.0-or-later.
-Game rules from the GNOME AisleRiot manual, under the <a href="#license">GNU Free Documentation License</a>.</div></footer>
+Based on <a href="#credits">GNOME AisleRiot</a>; game rules from its manual, under the <a href="#license">GNU Free Documentation License</a>.</div></footer>
 <script>
 const pages = [...document.querySelectorAll(".page")];
 function show() {

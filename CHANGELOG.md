@@ -4,6 +4,15 @@ Every bug fix or improvement raises the minor version. The version is set in
 `Cargo.toml`; add a matching `<release>` to
 `packaging/linux/io.github.rustysolitaire.RustySolitaire.metainfo.xml`.
 
+## 0.4.0 — 2026-10-29
+
+- Help → Credits: everyone who made GNOME AisleRiot and what they did — the
+  program's authors, who programmed and who documented each of the 91 games,
+  the card designers, other contributors and the translators of all its
+  languages. Also reachable from the Credits button in the About box.
+- macOS: besides the universal disk image there are now separate, smaller
+  ones for Apple Silicon and for Intel Macs.
+
 ## 0.3.0 — 2026-10-29
 
 - Game → Statistics: wins, games played, win percentage and the best and

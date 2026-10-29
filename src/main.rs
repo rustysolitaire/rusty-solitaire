@@ -800,7 +800,7 @@ impl Ui {
                          Licensed under the GNU General Public License, version 3 or later.",
                         env!("CARGO_PKG_VERSION")
                     ),
-                    &[("close", "Close")],
+                    &[("credits", "Credits"), ("close", "Close")],
                 );
             }
             _ if id.starts_with("theme:") => {
@@ -857,6 +857,8 @@ impl Ui {
         };
         match id {
             "new-game" | "restart" | "undo" => self.action(id),
+            // Everyone who made AisleRiot, in the help.
+            "credits" => self.open_help("credits"),
             "quit" => {
                 let _ = slint::quit_event_loop();
             }

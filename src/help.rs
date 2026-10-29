@@ -31,7 +31,7 @@ fn cache_dir() -> Option<PathBuf> {
 }
 
 /// The help as it opens on `page`: a game's file name (e.g. "klondike"),
-/// CONTENTS, "keyboard" or "glossary".
+/// CONTENTS, "keyboard", "glossary" or "credits".
 pub fn page_html(page: &str) -> String {
     RULES.replacen("@START@", page, 1)
 }
@@ -54,7 +54,9 @@ mod tests {
         for file in crate::rules::game_files() {
             assert!(RULES.contains(&format!("<div class=\"page\" id=\"{file}\"")), "no help page for {file}");
         }
-        assert!(RULES.contains(&format!("id=\"{CONTENTS}\"")));
+        for page in [CONTENTS, "keyboard", "glossary", "credits", "license"] {
+            assert!(RULES.contains(&format!("<div class=\"page\" id=\"{page}\"")), "no {page} page");
+        }
         assert!(page_html("klondike").contains("data-start=\"klondike\""));
     }
 }

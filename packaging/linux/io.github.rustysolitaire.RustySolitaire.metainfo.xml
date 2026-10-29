@@ -35,6 +35,11 @@
     <control>keyboard</control>
   </supports>
   <releases>
+    <release version="0.4.0" date="2026-10-29">
+      <description>
+        <p>Credits for everyone who made GNOME AisleRiot, in the help and the About box.</p>
+      </description>
+    </release>
     <release version="0.3.0" date="2026-10-29">
       <description>
         <p>Statistics, sounds, keyboard play, a keyboard shortcuts window, and the rules of every game in the Help menu.</p>
