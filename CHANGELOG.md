@@ -4,6 +4,14 @@ Every bug fix or improvement raises the minor version. The version is set in
 `Cargo.toml`; add a matching `<release>` to
 `packaging/linux/io.github.rustysolitaire.RustySolitaire.metainfo.xml`.
 
+## 0.5.0 — 2026-10-29
+
+- A new application icon, the Rusty fan: four cards (felt-green and rust
+  backs, ace of spades, ace of hearts) on a dark rounded tile, in the
+  website's colours. A simplified version is used at 16-32 px. It replaces
+  the three fanned cards in the window, the Linux packages and Flatpak, the
+  Windows program and installer, and the macOS app.
+
 ## 0.4.0 — 2026-10-29
 
 - Help → Credits: everyone who made GNOME AisleRiot and what they did — the
