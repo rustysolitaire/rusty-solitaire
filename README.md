@@ -171,6 +171,21 @@ the text, rebuild it from the AisleRiot help sources:
 python3 tools/gen-help.py ../reference/aisleriot-original/help/C
 ```
 
+## Application icon
+
+The icon has two master SVGs: `packaging/linux/io.github.rustysolitaire.RustySolitaire.svg`
+for 48 px and up, and `assets/icons/rusty-solitaire-small.svg`, a simplified version for
+16–32 px. After changing either, run
+
+```bash
+tools/gen-icons.sh ../website
+```
+
+to render `assets/icons/aisleriot-256.png` (window icon, Linux packages, Flatpak),
+`assets/icons/aisleriot.ico` (Windows) and the website's icon and favicon. The macOS
+build renders its 1024 px icon from the large SVG itself. Both need `rsvg-convert`
+(`apt install librsvg2-bin`).
+
 ## Layout
 
 | Path | What it is | Ported from |

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Rusty fan for 16-32 px: the tile fills the square, three bold cards, no corner indices. -->
+  <rect width="32" height="32" rx="7" fill="#1d1f1c"/>
+  <rect x=".5" y=".5" width="31" height="31" rx="6.5" fill="none" stroke="#fff" stroke-opacity=".14"/>
+  <g transform="translate(16 30.5)" stroke="#1d1f1c" stroke-width="1">
+    <rect transform="rotate(-20)" x="-6.5" y="-26" width="13" height="18" rx="1.8" fill="#2e7a3c"/>
+    <rect x="-6.5" y="-26.5" width="13" height="18" rx="1.8" fill="#c2552b"/>
+    <g transform="rotate(20)">
+      <rect x="-6.5" y="-26" width="13" height="18" rx="1.8" fill="#fbfaf6"/>
+      <path transform="translate(0 -17.5) scale(.42)" d="M0 9C-12 0 -15 -9 -7.5 -12C-3 -13.5 0 -9 0 -7.5C0 -9 3 -13.5 7.5 -12C15 -9 12 0 0 9Z" fill="#c8252c" stroke="none"/>
+    </g>
+  </g>
+</svg>

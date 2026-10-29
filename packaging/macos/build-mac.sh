@@ -33,10 +33,11 @@ VARIANTS=(universal apple-silicon intel)
 SSH=(ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4)
 
 # A sharp 1024 px icon for the .icns, rendered from the SVG here (the Mac
-# can't rasterise SVG without extra tools).
+# can't rasterise SVG without extra tools). rsvg-convert (apt install
+# librsvg2-bin), because ImageMagick's own SVG renderer draws it wrong.
 mkdir -p target/macos dist
-convert -background none -density 384 packaging/linux/io.github.rustysolitaire.RustySolitaire.svg \
-    -resize 1024x1024 target/macos/icon-1024.png
+rsvg-convert -w 1024 -h 1024 packaging/linux/io.github.rustysolitaire.RustySolitaire.svg \
+    -o target/macos/icon-1024.png
 
 echo "Copying the source to $MAC..."
 rsync -az --delete -e "${SSH[*]}" \
