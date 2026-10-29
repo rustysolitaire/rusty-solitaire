@@ -1,0 +1,4 @@
+target/
+dist/
+# Machine-specific settings
+packaging/macos/local.env

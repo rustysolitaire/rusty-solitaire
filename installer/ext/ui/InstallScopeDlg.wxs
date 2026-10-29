@@ -1,0 +1,57 @@
+<!--
+  Rusty Solitaire - installer: first page of the setup wizard.
+
+  Lets the user choose a per-user install (into %LocalAppData%\Programs,
+  no administrator rights needed) or a per-machine install (into
+  Program Files, elevates). Uses Windows Installer "single package
+  authoring": ALLUSERS=2 plus MSIINSTALLPERUSER, as WiX's
+  WixUI_Advanced InstallScopeDlg does.
+
+  Copyright (C) 2026 The Rusty Solitaire authors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Fragment>
+        <UI>
+            <Dialog Id="InstallScopeDlg" Width="370" Height="270" Title="[ProductName] Setup">
+                <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+                <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+                <Control Id="Title" Type="Text" X="15" Y="6" Width="300" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Installation Scope" />
+                <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Choose who [ProductName] should be installed for." />
+                <Control Id="Welcome" Type="Text" X="20" Y="60" Width="330" Height="25" NoPrefix="yes" Text="Welcome to the [ProductName] Setup Wizard. It will install [ProductName] [ProductVersion] on your computer." />
+                <Control Id="ScopeGroup" Type="RadioButtonGroup" X="20" Y="94" Width="330" Height="120" Property="WixAppFolder">
+                    <RadioButtonGroup Property="WixAppFolder">
+                        <RadioButton Value="WixPerUserFolder" X="0" Y="0" Width="330" Height="14" Text="Install just for &amp;you ([LogonUser])" />
+                        <RadioButton Value="WixPerMachineFolder" X="0" Y="56" Width="330" Height="14" Text="Install for &amp;all users of this computer" />
+                    </RadioButtonGroup>
+                </Control>
+                <Control Id="PerUserText" Type="Text" X="33" Y="111" Width="310" Height="36" NoPrefix="yes" Text="[ProductName] is installed in your user profile ([LocalAppDataFolder]Programs) and only you can play it. No administrator rights are needed." />
+                <Control Id="PerMachineText" Type="Text" X="33" Y="167" Width="310" Height="36" NoPrefix="yes" Text="[ProductName] is installed in the Program Files folder and every user of this computer can play it. Administrator rights are needed." />
+                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+                <Control Id="Back" Type="PushButton" X="156" Y="243" Width="56" Height="17" Disabled="yes" Text="&amp;Back" />
+
+                <!-- Two Install buttons: only the per-machine one shows the UAC shield. -->
+                <Control Id="InstallNoShield" Type="PushButton" ElevationShield="no" X="212" Y="243" Width="80" Height="17" Default="yes" Text="&amp;Install" Hidden="yes" ShowCondition="WixAppFolder = &quot;WixPerUserFolder&quot;" HideCondition="WixAppFolder &lt;&gt; &quot;WixPerUserFolder&quot;">
+                    <Publish Property="ALLUSERS" Value="2" Order="1" />
+                    <Publish Property="MSIINSTALLPERUSER" Value="1" Order="2" />
+                    <Publish Event="SpawnWaitDialog" Value="WaitForCostingDlg" Condition="1 OR CostingComplete = 1" Order="3" />
+                    <Publish Event="EndDialog" Value="Return" Condition="OutOfDiskSpace &lt;&gt; 1" Order="4" />
+                    <Publish Event="SpawnDialog" Value="OutOfDiskDlg" Condition="OutOfDiskSpace = 1" Order="5" />
+                </Control>
+                <Control Id="InstallShield" Type="PushButton" ElevationShield="yes" X="212" Y="243" Width="80" Height="17" Text="&amp;Install" Hidden="yes" ShowCondition="WixAppFolder = &quot;WixPerMachineFolder&quot;" HideCondition="WixAppFolder &lt;&gt; &quot;WixPerMachineFolder&quot;">
+                    <Publish Property="ALLUSERS" Value="2" Order="1" />
+                    <Publish Property="MSIINSTALLPERUSER" Value="{}" Order="2" />
+                    <Publish Event="SpawnWaitDialog" Value="WaitForCostingDlg" Condition="1 OR CostingComplete = 1" Order="3" />
+                    <Publish Event="EndDialog" Value="Return" Condition="OutOfDiskSpace &lt;&gt; 1" Order="4" />
+                    <Publish Event="SpawnDialog" Value="OutOfDiskDlg" Condition="OutOfDiskSpace = 1" Order="5" />
+                </Control>
+                <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+                    <Publish Event="SpawnDialog" Value="CancelDlg" />
+                </Control>
+            </Dialog>
+            <InstallUISequence>
+                <Show Dialog="InstallScopeDlg" Before="ProgressDlg" Condition="NOT Installed" />
+            </InstallUISequence>
+        </UI>
+    </Fragment>
+</Wix>

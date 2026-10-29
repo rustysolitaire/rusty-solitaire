@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Rusty Solitaire - Windows Installer package.
+
+  Build with installer/build-msi.sh (uses wixl from msitools).
+
+  The package is "dual purpose": the first wizard page asks whether to
+  install just for the current user (into %LocalAppData%\Programs, no
+  administrator rights) or for all users (into Program Files, elevates).
+  The Start menu shortcut follows the same choice.
+
+  Copyright (C) 2026 The Rusty Solitaire authors
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="Rusty Solitaire"
+           Manufacturer="The Rusty Solitaire authors"
+           Version="$(var.Version)"
+           UpgradeCode="5E1A5E5C-7A3B-4C1E-9D2F-6B8A0C4D2E71"
+           Language="1033">
+
+    <!-- perUser marks the package as not needing elevation; ALLUSERS=2 and
+         MSIINSTALLPERUSER below turn it into a per-user-or-per-machine package. -->
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perUser"
+             Description="Rusty Solitaire $(var.Version) Installer"
+             Comments="Solitaire games, based on GNOME AisleRiot. GPL-3.0-or-later." />
+
+    <!-- The UpgradeCode never changes: a newer version replaces an older one. -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <Media Id="1" Cabinet="app.cab" EmbedCab="yes" />
+
+    <Property Id="ALLUSERS" Value="2" />
+    <Property Id="MSIINSTALLPERUSER" Value="1" />
+    <Property Id="WixAppFolder" Value="WixPerUserFolder" />
+
+    <Icon Id="RustySolitaire.ico" SourceFile="$(var.Assets)/icons/aisleriot.ico" />
+    <Property Id="ARPPRODUCTICON" Value="RustySolitaire.ico" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPCONTACT" Value="The Rusty Solitaire authors" />
+    <Property Id="ARPCOMMENTS" Value="Solitaire games, based on GNOME AisleRiot." />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Redirected to %LocalAppData%\Programs for a per-user install. The
+           mixed-case Id keeps it a private property, so the install step
+           resolves it again from the scope the user picked. -->
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="InstallFolder" Name="Rusty Solitaire">
+          <Component Id="Executable" Guid="E8C1DE5D-B329-4B13-A96E-E91B3A508BD5" Win64="yes">
+            <File Id="RustySolitaireExe" Name="rusty-solitaire.exe" Source="$(var.ExePath)" KeyPath="yes" />
+          </Component>
+          <Component Id="License" Guid="C928A825-8079-474A-B655-48D8DABF1824" Win64="yes">
+            <File Id="LicenseTxt" Name="LICENSE.txt" Source="$(var.Assets)/licenses/COPYING.GPL3" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+      <!-- The user's or the all-users Start menu, following ALLUSERS. -->
+      <Directory Id="ProgramMenuFolder">
+        <Component Id="StartMenuShortcut" Guid="E3FB6A95-92D7-496E-B604-7964A4223706" Win64="yes">
+          <Shortcut Id="RustySolitaireShortcut"
+                    Name="Rusty Solitaire"
+                    Description="Play solitaire"
+                    Target="[#RustySolitaireExe]"
+                    WorkingDirectory="InstallFolder"
+                    Icon="RustySolitaire.ico" />
+          <!-- HKMU is HKCU for a per-user install and HKLM for all users. -->
+          <RegistryValue Root="HKMU" Key="Software\Rusty Solitaire"
+                         Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+          <!-- Remembered so repair and uninstall find the files again. -->
+          <RegistryValue Root="HKMU" Key="Software\Rusty Solitaire"
+                         Name="InstallFolder" Type="string" Value="[InstallFolder]" />
+        </Component>
+      </Directory>
+    </Directory>
+
+    <Feature Id="Main" Title="Rusty Solitaire" Level="1" Absent="disallow">
+      <ComponentRef Id="Executable" />
+      <ComponentRef Id="License" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+
+    <!-- Per-user installs go to %LocalAppData%\Programs (FOLDERID_UserProgramFiles).
+         Windows redirects ProgramFiles64Folder there by itself, but setting it
+         explicitly doesn't depend on that (Wine, for one, doesn't redirect).
+         During repair/removal of a per-machine install ALLUSERS is 1, so this
+         only applies to per-user installs. -->
+    <CustomAction Id="SetPerUserInstallFolder" Property="InstallFolder"
+                  Value="[LocalAppDataFolder]Programs\Rusty Solitaire\" Execute="immediate" />
+
+    <!-- On repair/removal, use the folder saved at install time. -->
+    <Property Id="SAVEDMACHINEFOLDER">
+      <RegistrySearch Id="SavedMachineFolder" Root="HKLM" Key="Software\Rusty Solitaire"
+                      Name="InstallFolder" Type="raw" Win64="yes" />
+    </Property>
+    <Property Id="SAVEDUSERFOLDER">
+      <RegistrySearch Id="SavedUserFolder" Root="HKCU" Key="Software\Rusty Solitaire"
+                      Name="InstallFolder" Type="raw" Win64="yes" />
+    </Property>
+    <CustomAction Id="RestoreMachineFolder" Property="InstallFolder" Value="[SAVEDMACHINEFOLDER]" Execute="immediate" />
+    <CustomAction Id="RestoreUserFolder" Property="InstallFolder" Value="[SAVEDUSERFOLDER]" Execute="immediate" />
+
+    <InstallExecuteSequence>
+      <Custom Action="SetPerUserInstallFolder" Before="CostFinalize">NOT Installed AND ((ALLUSERS = 2 AND MSIINSTALLPERUSER = 1) OR NOT ALLUSERS)</Custom>
+      <Custom Action="RestoreMachineFolder" Before="CostFinalize">Installed AND SAVEDMACHINEFOLDER</Custom>
+      <Custom Action="RestoreUserFolder" Before="CostFinalize">Installed AND SAVEDUSERFOLDER AND ALLUSERS &lt;&gt; 1</Custom>
+    </InstallExecuteSequence>
+
+    <!-- "Launch Rusty Solitaire" on the last page. -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Rusty Solitaire" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <CustomAction Id="LaunchApplication" FileKey="RustySolitaireExe" ExeCommand="" Return="asyncNoWait" Impersonate="yes" />
+
+    <UIRef Id="AppUI" />
+    <UIRef Id="WixUI_Common" />
+  </Product>
+</Wix>

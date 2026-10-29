@@ -1,0 +1,11 @@
+# Windows on ARM64 is built with llvm-mingw (https://github.com/mstorsjo/llvm-mingw);
+# put its bin/ directory on PATH (installer/build-msi.sh does this).
+[target.aarch64-pc-windows-gnullvm]
+linker = "aarch64-w64-mingw32-clang"
+# Link libunwind and the C++ runtime statically: Windows doesn't ship them.
+rustflags = ["-C", "target-feature=+crt-static"]
+
+# Linux on ARM64, cross-compiled with Ubuntu's gcc-aarch64-linux-gnu.
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+

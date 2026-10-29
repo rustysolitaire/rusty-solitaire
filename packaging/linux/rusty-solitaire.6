@@ -1,0 +1,37 @@
+.\" Rusty Solitaire manual page.
+.\" Copyright (C) 2026 The Rusty Solitaire authors
+.\" SPDX-License-Identifier: GPL-3.0-or-later
+.TH RUSTY-SOLITAIRE 6 "2026" "Rusty Solitaire" "Games"
+.SH NAME
+rusty-solitaire \- play 91 solitaire card games
+.SH SYNOPSIS
+.B rusty-solitaire
+.RB [ \-\-log\-input ]
+.SH DESCRIPTION
+.B Rusty Solitaire
+is a collection of 91 solitaire (patience) card games, including Klondike,
+FreeCell, Spider, Golf, Yukon and Scorpion. It is a Rust port of GNOME
+AisleRiot and plays every game by AisleRiot's original rules.
+.PP
+Choose a game with Game \(-> Select Game.
+Cards are moved by dragging them, or by clicking them with Click to Move
+turned on.
+Double-click a card to send it to a foundation, and right-click (or, on a
+touch screen, press and hold) a covered card to see it.
+.SH OPTIONS
+.TP
+.B \-\-log\-input
+Record every press, move and release, and every menu action, in
+.IR input\-log.txt
+in the settings folder, to help diagnose input problems.
+The same can be turned on with Help \(-> Record Input Log.
+.SH FILES
+.TP
+.I ~/.config/rusty-solitaire/settings.ini
+Settings: the last game played, game options, card style and so on.
+.SH AUTHOR
+Rusty Solitaire was written by the Rusty Solitaire authors, based on GNOME AisleRiot by
+Jonathan Blandford, Felix Bellaby, Rosanna Yuen, Callum McKenzie, Vincent Povirk
+and many others.
+.SH LICENSE
+GPL-3.0-or-later. Card designs, artwork and fonts keep their own licenses.

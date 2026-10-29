@@ -1,0 +1,793 @@
+// Rusty Solitaire - main window.
+//
+// Recreates the GTK 3 / Adwaita look of the original Aisleriot window:
+// menu bar, toolbar, the card table and the status bar.
+//
+// Copyright (C) 2026 The Rusty Solitaire authors (Rust port)
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+import "../assets/fonts/Cantarell-Regular.otf";
+import "../assets/fonts/Cantarell-Bold.otf";
+
+// Adwaita (GTK 3.24) palette.
+global Gtk {
+    out property <color> window-bg: #f6f5f4;
+    out property <color> fg: #2e3436;
+    out property <color> disabled-fg: #929595;
+    out property <color> borders: #cdc7c2;
+    out property <color> menubar-border: #dedddc;
+    out property <color> selected-bg: #3584e4;
+    out property <color> link: #1b6acb;
+    out property <color> menu-separator: #e6e6e6;
+    out property <color> accel-fg: #8b8e8f;
+    out property <color> button-bg: #f6f5f4;
+    out property <color> button-hover-bg: #f8f8f7;
+    out property <color> button-active-bg: #dad6d2;
+    out property <color> board-bg: rgb(0, 79, 15);
+    // 11pt Cantarell, GNOME's default UI font.
+    out property <length> font-size: 14.67px;
+}
+
+export enum MenuItemKind { normal, check, radio, separator, submenu }
+
+export struct MenuItemData {
+    id: string,
+    label: string,
+    accel: string,
+    enabled: bool,
+    kind: MenuItemKind,
+    checked: bool,
+}
+
+export struct MenuData {
+    title: string,
+    items: [MenuItemData],
+}
+
+export enum BoardCursor { default, open, closed }
+
+export struct DialogButton {
+    id: string,
+    label: string,
+}
+
+// ---------------------------------------------------------------- menus --
+
+component CheckIndicator inherits Rectangle {
+    in property <bool> checked;
+    in property <bool> radio;
+    in property <bool> enabled: true;
+    in property <bool> hovered;
+    width: 16px;
+    height: 16px;
+    border-radius: radio ? 8px : 3px;
+    border-width: 1px;
+    border-color: hovered ? #ffffff : (enabled ? #8b8e8f : Gtk.borders);
+    background: hovered ? Gtk.selected-bg : #ffffff;
+
+    if checked && !radio: Path {
+        width: 12px;
+        height: 12px;
+        viewbox-width: 12;
+        viewbox-height: 12;
+        commands: "M 2 6.5 L 5 9.5 L 10.5 2.5";
+        stroke: hovered ? #ffffff : (enabled ? Gtk.fg : Gtk.disabled-fg);
+        stroke-width: 2px;
+        fill: transparent;
+    }
+    if checked && radio: Rectangle {
+        width: 6px;
+        height: 6px;
+        border-radius: 3px;
+        background: hovered ? #ffffff : (enabled ? Gtk.fg : Gtk.disabled-fg);
+    }
+}
+
+component MenuRow inherits Rectangle {
+    in property <MenuItemData> item;
+    in property <bool> force-highlight;
+    callback activated();
+    callback hovered-changed(bool);
+    out property <bool> hovered: touch.has-hover;
+
+    property <bool> highlighted: (touch.has-hover || force-highlight) && item.enabled;
+    property <color> text-color: !item.enabled ? Gtk.disabled-fg : (highlighted ? #ffffff : Gtk.fg);
+
+    background: highlighted ? Gtk.selected-bg : transparent;
+    min-width: layout.preferred-width;
+    height: item.kind == MenuItemKind.separator ? 1px : layout.preferred-height;
+
+    if item.kind == MenuItemKind.separator: Rectangle {
+        background: Gtk.menu-separator;
+    }
+
+    layout := HorizontalLayout {
+        visible: item.kind != MenuItemKind.separator;
+        padding-left: 6px;
+        padding-right: 6px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        spacing: 6px;
+        Rectangle {
+            width: 16px;
+            if item.kind == MenuItemKind.check || item.kind == MenuItemKind.radio: CheckIndicator {
+                checked: item.checked;
+                radio: item.kind == MenuItemKind.radio;
+                enabled: item.enabled;
+                hovered: highlighted;
+            }
+        }
+        Text {
+            text: item.label;
+            color: text-color;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+        }
+        if item.accel != "": Rectangle { width: 24px; }
+        if item.accel != "": Text {
+            text: item.accel;
+            color: highlighted ? #ffffffb0 : (item.enabled ? Gtk.accel-fg : Gtk.borders);
+            vertical-alignment: center;
+            horizontal-alignment: right;
+        }
+        if item.kind == MenuItemKind.submenu: Path {
+            width: 16px;
+            height: 16px;
+            viewbox-width: 16;
+            viewbox-height: 16;
+            commands: "M 6 4 L 10 8 L 6 12";
+            stroke: text-color;
+            stroke-width: 1.5px;
+            fill: transparent;
+        }
+    }
+
+    touch := TouchArea {
+        enabled: item.kind != MenuItemKind.separator;
+        clicked => {
+            if item.enabled && item.kind != MenuItemKind.submenu {
+                root.activated();
+            }
+        }
+        changed has-hover => { root.hovered-changed(self.has-hover); }
+    }
+}
+
+component MenuPopup inherits Rectangle {
+    in property <[MenuItemData]> items;
+    in property <int> highlighted-index: -1;
+    callback activated(MenuItemData);
+    callback row-hovered(int, MenuItemData, length);
+
+    background: #ffffff;
+    border-width: 1px;
+    border-color: Gtk.borders;
+    drop-shadow-blur: 8px;
+    drop-shadow-offset-y: 2px;
+    drop-shadow-color: #00000030;
+    in property <length> limit-height: 100000px;
+    width: column.preferred-width + 2px;
+    height: min(column.preferred-height + 2px, limit-height);
+
+    // Swallow clicks so they don't reach the board underneath.
+    TouchArea { }
+
+    // Long menus (Card Style) scroll when they don't fit the window.
+    Flickable {
+        x: 1px;
+        y: 1px;
+        width: parent.width - 2px;
+        height: parent.height - 2px;
+        content-height: column.preferred-height;
+
+        column := VerticalLayout {
+            width: parent.width;
+            for item[i] in items: MenuRow {
+                item: item;
+                force-highlight: i == highlighted-index;
+                min-width: 40px;
+                activated => { root.activated(item); }
+                hovered-changed(h) => {
+                    if h { root.row-hovered(i, item, self.y + 1px); }
+                }
+            }
+        }
+    }
+}
+
+component MenuTitle inherits Rectangle {
+    in property <string> title;
+    in property <bool> active;
+    callback pressed();
+    callback hovered();
+
+    width: label.preferred-width + 16px;
+
+    label := Text {
+        text: title;
+        color: active ? Gtk.link : Gtk.fg;
+        vertical-alignment: center;
+        horizontal-alignment: center;
+    }
+    if active: Rectangle {
+        y: parent.height - 3px;
+        height: 3px;
+        background: Gtk.selected-bg;
+    }
+    TouchArea {
+        pointer-event(ev) => {
+            if ev.kind == PointerEventKind.down && ev.button == PointerEventButton.left {
+                root.pressed();
+            }
+        }
+        changed has-hover => {
+            if self.has-hover { root.hovered(); }
+        }
+    }
+}
+
+// -------------------------------------------------------------- toolbar --
+
+component ToolButton inherits Rectangle {
+    in property <image> icon;
+    in property <bool> symbolic: true;
+    in property <bool> enabled: true;
+    in property <string> tooltip;
+    callback clicked();
+
+    width: 34px;
+    height: 34px;
+    border-radius: 5px;
+    border-width: (touch.has-hover && enabled) ? 1px : 0px;
+    border-color: Gtk.borders;
+    background: !enabled ? transparent : (touch.pressed ? Gtk.button-active-bg : (touch.has-hover ? Gtk.button-hover-bg : transparent));
+
+    Image {
+        source: icon;
+        width: 24px;
+        height: 24px;
+        colorize: symbolic ? (enabled ? Gtk.fg : Gtk.disabled-fg) : transparent;
+        opacity: (symbolic || enabled) ? 1.0 : 0.45;
+    }
+    touch := TouchArea {
+        enabled: root.enabled;
+        clicked => { root.clicked(); }
+    }
+}
+
+component ToolSeparator inherits Rectangle {
+    width: 13px;
+    Rectangle {
+        width: 1px;
+        height: parent.height - 8px;
+        background: #00000020;
+    }
+}
+
+// --------------------------------------------------------------- dialog --
+
+component MessageDialog inherits Rectangle {
+    in property <string> message;
+    in property <[DialogButton]> buttons;
+    callback response(string);
+
+    // Modal: block the window underneath.
+    TouchArea { }
+
+    Rectangle {
+        width: max(400px, content.preferred-width);
+        height: content.preferred-height;
+        background: Gtk.window-bg;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #00000030;
+        drop-shadow-blur: 16px;
+        drop-shadow-offset-y: 3px;
+        drop-shadow-color: #00000060;
+        clip: true;
+
+        content := VerticalLayout {
+            HorizontalLayout {
+                padding: 30px;
+                padding-top: 24px;
+                padding-bottom: 24px;
+                spacing: 18px;
+                Image {
+                    source: @image-url("../assets/icons/dialog-information-symbolic.svg");
+                    colorize: Gtk.fg;
+                    width: 48px;
+                    height: 48px;
+                }
+                Text {
+                    text: message;
+                    font-weight: 700;
+                    color: Gtk.fg;
+                    wrap: word-wrap;
+                    vertical-alignment: center;
+                    horizontal-alignment: center;
+                    max-width: 520px;
+                }
+            }
+            Rectangle {
+                height: 1px;
+                background: Gtk.borders;
+            }
+            HorizontalLayout {
+                for button[i] in buttons: Rectangle {
+                    height: 42px;
+                    min-width: label.preferred-width + 28px;
+                    horizontal-stretch: 1;
+                    background: btouch.pressed ? Gtk.button-active-bg : (btouch.has-hover ? Gtk.button-hover-bg : Gtk.window-bg);
+                    if i > 0: Rectangle {
+                        x: 0;
+                        width: 1px;
+                        background: Gtk.borders;
+                    }
+                    label := Text {
+                        text: button.label;
+                        color: Gtk.fg;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                    btouch := TouchArea {
+                        clicked => { root.response(button.id); }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --------------------------------------------------------- game chooser --
+
+component DialogButtonGtk inherits Rectangle {
+    in property <string> label;
+    in property <bool> default-button;
+    callback clicked();
+    width: max(85px, text.preferred-width + 32px);
+    height: 34px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: Gtk.borders;
+    background: touch.pressed ? Gtk.button-active-bg : (touch.has-hover ? #ffffff : #f6f5f4);
+    drop-shadow-offset-y: 1px;
+    drop-shadow-color: #00000012;
+    text := Text {
+        text: label;
+        color: Gtk.fg;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    touch := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+// The "Select Game" dialog (ar-game-chooser.c): a list of every game,
+// with Cancel and Select.
+component GameChooser inherits Rectangle {
+    in property <[string]> names;
+    in-out property <int> selected;
+    callback response(bool);
+
+    property <length> row-height: 23px;
+
+    // Modal: block the window underneath.
+    TouchArea { }
+
+    frame := Rectangle {
+        width: 340px;
+        height: min(root.height - 40px, 430px);
+        background: Gtk.window-bg;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #00000030;
+        drop-shadow-blur: 16px;
+        drop-shadow-offset-y: 3px;
+        drop-shadow-color: #00000060;
+        clip: true;
+
+        VerticalLayout {
+            padding: 16px;
+            spacing: 14px;
+            Text {
+                text: "Select Game";
+                font-weight: 700;
+                color: Gtk.fg;
+                horizontal-alignment: center;
+            }
+            Rectangle {
+                vertical-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: Gtk.borders;
+                list := Flickable {
+                    x: 1px;
+                    y: 1px;
+                    width: parent.width - 2px;
+                    height: parent.height - 2px;
+                    content-height: names.length * row-height;
+                    // Keep the selected game in view.
+                    init => {
+                        self.content-y = -max(0px, min(selected * row-height - self.height / 2,
+                            names.length * row-height - self.height));
+                    }
+                    for name[i] in names: Rectangle {
+                        y: i * row-height;
+                        height: row-height;
+                        width: parent.width;
+                        background: i == selected ? Gtk.selected-bg : transparent;
+                        Text {
+                            x: 6px;
+                            text: name;
+                            color: i == selected ? #ffffff : Gtk.fg;
+                            vertical-alignment: center;
+                        }
+                        TouchArea {
+                            clicked => { selected = i; }
+                            double-clicked => {
+                                selected = i;
+                                root.response(true);
+                            }
+                        }
+                    }
+                }
+            }
+            HorizontalLayout {
+                alignment: end;
+                spacing: 8px;
+                DialogButtonGtk {
+                    label: "Cancel";
+                    clicked => { root.response(false); }
+                }
+                DialogButtonGtk {
+                    label: "Select";
+                    clicked => { root.response(true); }
+                }
+            }
+        }
+    }
+}
+
+// --------------------------------------------------------------- window --
+
+export component AppWindow inherits Window {
+    in property <string> game-title: "Rusty Solitaire";
+    title: game-title;
+    icon: @image-url("../assets/icons/aisleriot-256.png");
+    preferred-width: 1024px;
+    preferred-height: 640px;
+    min-width: 400px;
+    min-height: 320px;
+    background: Gtk.window-bg;
+    default-font-family: "Cantarell";
+    default-font-size: Gtk.font-size;
+
+    in property <[MenuData]> menus;
+    in property <[MenuItemData]> theme-items;
+    in property <[MenuItemData]> recent-items;
+    in property <bool> show-score: true;
+    in property <bool> chooser-visible;
+    in property <[string]> chooser-names;
+    in-out property <int> chooser-selected;
+    in property <image> board-image;
+    // The cards being dragged: drawn once, then only moved.
+    in property <image> drag-image;
+    in property <bool> drag-visible;
+    in property <length> drag-x;
+    in property <length> drag-y;
+    in property <length> drag-width;
+    in property <length> drag-height;
+    in property <BoardCursor> board-cursor;
+    in property <string> status-message;
+    in property <string> time-text: "00:00:00";
+    in property <string> score-text: "0";
+    in property <bool> show-toolbar: true;
+    in property <bool> show-statusbar: true;
+    in property <bool> can-undo;
+    in property <bool> can-redo;
+    in property <bool> can-deal;
+    in property <bool> can-restart;
+    in property <bool> fullscreen-mode;
+    in property <bool> dialog-visible;
+    in property <string> dialog-message;
+    in property <[DialogButton]> dialog-buttons;
+
+    out property <length> board-width: board.width;
+    out property <length> board-height: board.height;
+
+    callback action(string);
+    callback board-resized();
+    callback board-press(length, length, int, bool);
+    callback board-release(length, length);
+    callback board-motion(length, length);
+    callback board-cancel();
+    callback dialog-response(string);
+    callback chooser-response(bool, int);
+
+    property <int> open-menu: -1;
+    property <length> menu-x;
+    property <bool> submenu-open;
+    property <string> submenu-id;
+    property <length> submenu-y;
+    property <length> submenu-parent-width;
+
+    function close-menus() {
+        open-menu = -1;
+        submenu-open = false;
+        focus-scope.focus();
+    }
+
+    function shortcut(event: KeyEvent) -> bool {
+        if event.text == Key.F11 { root.action("fullscreen"); return true; }
+        if event.text == Key.F1 {
+            root.action(event.modifiers.shift ? "help-game" : "help");
+            return true;
+        }
+        if event.text == Key.Escape {
+            if open-menu >= 0 { close-menus(); return true; }
+            if fullscreen-mode { root.action("fullscreen"); return true; }
+            return false;
+        }
+        if !event.modifiers.control { return false; }
+        if event.text == "z" || event.text == "Z" {
+            root.action(event.modifiers.shift ? "redo" : "undo");
+            return true;
+        }
+        if event.text == "n" { root.action("new-game"); return true; }
+        if event.text == "o" { root.action("select-game"); return true; }
+        if event.text == "w" || event.text == "q" { root.action("close"); return true; }
+        if event.text == "d" { root.action("deal"); return true; }
+        if event.text == "h" { root.action("hint"); return true; }
+        return false;
+    }
+
+    init => { focus-scope.focus(); }
+
+    focus-scope := FocusScope {
+        key-pressed(event) => {
+            if chooser-visible {
+                if event.text == Key.Escape {
+                    root.chooser-response(false, chooser-selected);
+                } else if event.text == Key.Return {
+                    root.chooser-response(true, chooser-selected);
+                } else if event.text == Key.UpArrow {
+                    chooser-selected = max(0, chooser-selected - 1);
+                } else if event.text == Key.DownArrow {
+                    chooser-selected = min(chooser-names.length - 1, chooser-selected + 1);
+                } else {
+                    return reject;
+                }
+                return accept;
+            }
+            if dialog-visible {
+                if event.text == Key.Escape || event.text == Key.Return {
+                    root.dialog-response(event.text == Key.Escape ? "dismiss" : "default");
+                    return accept;
+                }
+                return reject;
+            }
+            return shortcut(event) ? accept : reject;
+        }
+
+        VerticalLayout {
+            // Menu bar
+            if !fullscreen-mode: Rectangle {
+                height: menubar-height();
+                background: Gtk.window-bg;
+                Rectangle {
+                    y: parent.height - 1px;
+                    height: 1px;
+                    background: Gtk.menubar-border;
+                }
+                menubar-row := HorizontalLayout {
+                    alignment: start;
+                    for menu[i] in menus: MenuTitle {
+                        title: menu.title;
+                        active: open-menu == i;
+                        pressed => {
+                            if open-menu == i {
+                                close-menus();
+                            } else {
+                                menu-x = self.x;
+                                submenu-open = false;
+                                open-menu = i;
+                            }
+                        }
+                        hovered => {
+                            if open-menu >= 0 && open-menu != i {
+                                menu-x = self.x;
+                                submenu-open = false;
+                                open-menu = i;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Toolbar
+            if show-toolbar || fullscreen-mode: Rectangle {
+                background: Gtk.window-bg;
+                height: 42px;
+                HorizontalLayout {
+                    padding-left: 4px;
+                    padding-right: 3px;
+                    padding-top: 4px;
+                    padding-bottom: 4px;
+                    spacing: 0px;
+                    alignment: start;
+                    ToolButton {
+                        icon: @image-url("../assets/icons/document-new-symbolic.svg");
+                        clicked => { root.action("new-game"); }
+                    }
+                    ToolButton {
+                        icon: @image-url("../assets/icons/view-refresh-symbolic.svg");
+                        enabled: can-restart;
+                        clicked => { root.action("restart"); }
+                    }
+                    ToolButton {
+                        icon: @image-url("../assets/icons/view-list-symbolic.svg");
+                        enabled: true;
+                        clicked => { root.action("select-game"); }
+                    }
+                    ToolSeparator { }
+                    ToolButton {
+                        icon: @image-url("../assets/icons/edit-undo-symbolic.svg");
+                        enabled: can-undo;
+                        clicked => { root.action("undo"); }
+                    }
+                    ToolButton {
+                        icon: @image-url("../assets/icons/edit-redo-symbolic.svg");
+                        enabled: can-redo;
+                        clicked => { root.action("redo"); }
+                    }
+                    ToolButton {
+                        icon: @image-url("../assets/icons/cards-deal.svg");
+                        symbolic: false;
+                        enabled: can-deal;
+                        clicked => { root.action("deal"); }
+                    }
+                    ToolButton {
+                        icon: @image-url("../assets/icons/dialog-information-symbolic.svg");
+                        clicked => { root.action("hint"); }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                    if fullscreen-mode: ToolButton {
+                        icon: @image-url("../assets/icons/view-restore-symbolic.svg");
+                        clicked => { root.action("fullscreen"); }
+                    }
+                }
+            }
+
+            // The card table
+            board := Rectangle {
+                background: Gtk.board-bg;
+                vertical-stretch: 1;
+                changed width => { root.board-resized(); }
+                changed height => { root.board-resized(); }
+                init => { root.board-resized(); }
+
+                Image {
+                    width: parent.width;
+                    height: parent.height;
+                    source: board-image;
+                    image-fit: fill;
+                }
+                if drag-visible: Image {
+                    x: drag-x;
+                    y: drag-y;
+                    width: drag-width;
+                    height: drag-height;
+                    source: drag-image;
+                    image-fit: fill;
+                }
+                TouchArea {
+                    mouse-cursor: board-cursor == BoardCursor.open ? MouseCursor.grab
+                        : board-cursor == BoardCursor.closed ? MouseCursor.grabbing
+                        : MouseCursor.default;
+                    // Touch arrives here as the left button, with a finger id.
+                    pointer-event(ev) => {
+                        if ev.kind == PointerEventKind.down {
+                            focus-scope.focus();
+                            root.board-press(self.mouse-x, self.mouse-y,
+                                ev.button == PointerEventButton.left ? 1
+                                : ev.button == PointerEventButton.middle ? 2 : 3,
+                                ev.touch-finger-id != 0);
+                        } else if ev.kind == PointerEventKind.up {
+                            root.board-release(self.mouse-x, self.mouse-y);
+                        } else if ev.kind == PointerEventKind.move {
+                            root.board-motion(self.mouse-x, self.mouse-y);
+                        } else if ev.kind == PointerEventKind.cancel {
+                            root.board-cancel();
+                        }
+                    }
+                }
+            }
+
+            // Status bar
+            if show-statusbar && !fullscreen-mode: Rectangle {
+                background: Gtk.window-bg;
+                HorizontalLayout {
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 6px;
+                    padding-bottom: 6px;
+                    spacing: 24px;
+                    Text {
+                        text: status-message;
+                        color: Gtk.fg;
+                        horizontal-stretch: 1;
+                        overflow: elide;
+                        vertical-alignment: center;
+                    }
+                    // GTK packs these as homogeneous boxes: both labels get
+                    // the width of the wider one, text centred.
+                    HorizontalLayout {
+                        property <length> cell: max(time-label.preferred-width, time-value.preferred-width);
+                        time-label := Text { text: "Time:"; color: Gtk.fg; width: cell; horizontal-alignment: center; }
+                        time-value := Text { text: time-text; color: Gtk.fg; width: cell; horizontal-alignment: center; }
+                    }
+                    if show-score: HorizontalLayout {
+                        property <length> cell: max(score-label.preferred-width, score-value.preferred-width);
+                        score-label := Text { text: "Score:"; color: Gtk.fg; width: cell; horizontal-alignment: center; }
+                        score-value := Text { text: score-text; color: Gtk.fg; width: cell; horizontal-alignment: center; }
+                    }
+                }
+            }
+        }
+
+        // Open menus are drawn on top of everything else. The catcher
+        // closes them when clicking anywhere outside.
+        if open-menu >= 0: TouchArea {
+            y: menubar-height();
+            height: parent.height - self.y;
+            clicked => { close-menus(); }
+        }
+        if open-menu >= 0: popup := MenuPopup {
+            x: min(menu-x, root.width - self.width);
+            y: menubar-height();
+            items: menus[open-menu].items;
+            activated(item) => {
+                close-menus();
+                root.action(item.id);
+            }
+            row-hovered(i, item, row-y) => {
+                if item.kind == MenuItemKind.submenu && item.enabled {
+                    submenu-id = item.id;
+                    submenu-y = self.y + row-y;
+                    submenu-parent-width = self.width;
+                    submenu-open = true;
+                } else {
+                    submenu-open = false;
+                }
+            }
+        }
+        if open-menu >= 0 && submenu-open: MenuPopup {
+            x: min(menu-x + submenu-parent-width - 4px, root.width - self.width);
+            y: max(0px, min(submenu-y - 1px, root.height - self.height));
+            limit-height: root.height;
+            items: submenu-id == "recent" ? recent-items : theme-items;
+            activated(item) => {
+                close-menus();
+                root.action(item.id);
+            }
+        }
+
+        if chooser-visible: GameChooser {
+            names: chooser-names;
+            selected <=> chooser-selected;
+            response(select) => { root.chooser-response(select, chooser-selected); }
+        }
+
+        if dialog-visible: MessageDialog {
+            message: dialog-message;
+            buttons: dialog-buttons;
+            response(id) => { root.dialog-response(id); }
+        }
+    }
+
+    pure function menubar-height() -> length {
+        fullscreen-mode ? 0px : (title-height.preferred-height + 8px);
+    }
+    title-height := Text { text: "Game"; visible: false; }
+}

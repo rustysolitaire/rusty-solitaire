@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Rusty Solitaire
+GenericName=Solitaire
+Comment=Play Klondike, FreeCell, Spider and 88 other solitaire games
+Exec=rusty-solitaire
+Icon=io.github.rustysolitaire.RustySolitaire
+Terminal=false
+Categories=Game;CardGame;
+Keywords=game;card;cards;solitaire;patience;klondike;freecell;spider;aisleriot;
+StartupNotify=true
+StartupWMClass=io.github.rustysolitaire.RustySolitaire

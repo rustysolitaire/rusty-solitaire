@@ -1,0 +1,26 @@
+// Template: build.rs fills in @VERSION@ (from Cargo.toml) and @ICON@.
+1 ICON "@ICON@"
+
+1 VERSIONINFO
+FILEVERSION @VERSION_COMMAS@
+PRODUCTVERSION @VERSION_COMMAS@
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "The Rusty Solitaire authors"
+      VALUE "FileDescription", "Rusty Solitaire"
+      VALUE "FileVersion", "@VERSION@"
+      VALUE "InternalName", "rusty-solitaire"
+      VALUE "LegalCopyright", "Copyright (C) 2026 The Rusty Solitaire authors. Based on GNOME AisleRiot. GPL-3.0-or-later."
+      VALUE "OriginalFilename", "rusty-solitaire.exe"
+      VALUE "ProductName", "Rusty Solitaire"
+      VALUE "ProductVersion", "@VERSION@"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

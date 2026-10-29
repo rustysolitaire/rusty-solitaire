@@ -1,0 +1,30 @@
+[package]
+name = "rusty-solitaire"
+version = "0.2.0"
+edition = "2024"
+authors = ["The Rusty Solitaire authors"]
+license = "GPL-3.0-or-later"
+description = "Rusty Solitaire: a cross-platform Rust port of GNOME Aisleriot Solitaire"
+publish = false
+
+[dependencies]
+slint = "1.18"
+resvg = "0.49"
+stacker = "0.1"
+
+# Load fontconfig at runtime instead of linking it (enables the option on the
+# font library Slint uses). Then building for Linux needs no development
+# libraries for the target, which is what makes the ARM64 cross-build easy.
+[target.'cfg(target_os = "linux")'.dependencies]
+fontique = { version = "0.11", default-features = false, features = ["fontconfig-dlopen"] }
+
+[build-dependencies]
+slint-build = "1.18"
+embed-resource = "3"
+
+[profile.dev]
+# Card themes are rendered with resvg; unoptimised it is painfully slow.
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3

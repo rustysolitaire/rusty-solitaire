@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Rusty Solitaire - macOS app bundle description. @VERSION@ is filled in
+     by packaging/macos/build-mac.sh. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>Rusty Solitaire</string>
+    <key>CFBundleName</key>
+    <string>Rusty Solitaire</string>
+    <key>CFBundleExecutable</key>
+    <string>rusty-solitaire</string>
+    <key>CFBundleIconFile</key>
+    <string>RustySolitaire</string>
+    <key>CFBundleIdentifier</key>
+    <string>io.github.rustysolitaire.RustySolitaire</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>@VERSION@</string>
+    <key>CFBundleVersion</key>
+    <string>@VERSION@</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.card-games</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>11.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 The Rusty Solitaire authors. Based on GNOME AisleRiot. GPL-3.0-or-later.</string>
+</dict>
+</plist>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2026 The Rusty Solitaire authors -->
+<component type="desktop-application">
+  <id>io.github.rustysolitaire.RustySolitaire</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Rusty Solitaire</name>
+  <summary>Play 91 different solitaire games</summary>
+  <developer id="io.github.rustysolitaire">
+    <name>The Rusty Solitaire authors</name>
+  </developer>
+  <description>
+    <p>
+      Rusty Solitaire is a collection of 91 solitaire card games, including
+      Klondike, FreeCell, Spider, Golf, Yukon and Scorpion. It is a Rust port
+      of GNOME AisleRiot and plays every game by AisleRiot's original rules.
+    </p>
+    <ul>
+      <li>Hints, unlimited undo and redo, and game options for each game</li>
+      <li>Drag and drop or click to move</li>
+      <li>26 card designs to choose from</li>
+    </ul>
+  </description>
+  <url type="homepage">https://github.com/rustysolitaire/rusty-solitaire</url>
+  <url type="bugtracker">https://github.com/rustysolitaire/rusty-solitaire/issues</url>
+  <launchable type="desktop-id">io.github.rustysolitaire.RustySolitaire.desktop</launchable>
+  <categories>
+    <category>Game</category>
+    <category>CardGame</category>
+  </categories>
+  <content_rating type="oars-1.1" />
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <releases>
+    <release version="0.2.0" date="2026-10-29">
+      <description>
+        <p>Credits now name "The Rusty Solitaire authors"; new application ID io.github.rustysolitaire.RustySolitaire.</p>
+      </description>
+    </release>
+    <release version="0.1.0" date="2026-10-28">
+      <description>
+        <p>First release: all 91 AisleRiot games.</p>
+      </description>
+    </release>
+  </releases>
+</component>
