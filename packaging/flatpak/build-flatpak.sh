@@ -69,12 +69,15 @@ EOF
     install -Dm644 assets/icons/aisleriot-256.png "$f/share/icons/hicolor/256x256/apps/$APP_ID.png"
     install -Dm644 assets/licenses/COPYING.GPL3 "$f/share/licenses/$APP_ID/COPYING"
 
-    # Sandbox: a window on Wayland or X11, and the GPU. No files, network or
-    # devices beyond that; settings live in ~/.var/app/io.github.rustysolitaire.RustySolitaire.
+    # Sandbox: a window on Wayland or X11, the GPU and sound output. No
+    # files, network or other devices; settings live in
+    # ~/.var/app/io.github.rustysolitaire.RustySolitaire. The help opens in
+    # the browser through the desktop portal.
     flatpak build-finish "$build" \
         --command=rusty-solitaire \
         --socket=wayland \
         --socket=fallback-x11 \
+        --socket=pulseaudio \
         --share=ipc \
         --device=dri
 

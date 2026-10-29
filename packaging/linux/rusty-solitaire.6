@@ -18,17 +18,25 @@ Cards are moved by dragging them, or by clicking them with Click to Move
 turned on.
 Double-click a card to send it to a foundation, and right-click (or, on a
 touch screen, press and hold) a covered card to see it.
+.PP
+The game can also be played with the keyboard: the arrow keys move between
+cards and piles, Space selects cards and Return moves them.
+Help \(-> Keyboard Shortcuts (Ctrl+?) lists all the keys, and Help \(-> Contents
+(F1) opens the rules of every game in the web browser.
+Game \(-> Statistics shows wins and best times for each game.
 .SH OPTIONS
 .TP
 .B \-\-log\-input
 Record every press, move and release, and every menu action, in
 .IR input\-log.txt
 in the settings folder, to help diagnose input problems.
-The same can be turned on with Help \(-> Record Input Log.
 .SH FILES
 .TP
 .I ~/.config/rusty-solitaire/settings.ini
-Settings: the last game played, game options, card style and so on.
+Settings: the last game played, game options, statistics, card style and so on.
+.TP
+.I ~/.cache/rusty-solitaire/help/
+The help pages, written there when opened from the Help menu.
 .SH AUTHOR
 Rusty Solitaire was written by the Rusty Solitaire authors, based on GNOME AisleRiot by
 Jonathan Blandford, Felix Bellaby, Rosanna Yuen, Callum McKenzie, Vincent Povirk

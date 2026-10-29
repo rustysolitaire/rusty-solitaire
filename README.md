@@ -11,11 +11,14 @@ that looks like the GTK 3 original on Linux, Windows and macOS. The UI uses
 
 | Done | Not yet |
 |---|---|
-| **All 91 Aisleriot games** (Game → Select Game…), with their rule options, hints and autoplay | Sounds (the files are already in `assets/sounds`) |
-| Card table ported from `board-noclutter.c`: layout, fanning, drag & drop, drop highlight, right-click reveal, double-click, click-to-move | Statistics |
+| **All 91 Aisleriot games** (Game → Select Game…), with their rule options, hints and autoplay | Notarized macOS / code-signed Windows builds |
+| Card table ported from `board-noclutter.c`: layout, fanning, drag & drop, drop highlight, right-click reveal, double-click, click-to-move | Animations |
+| Keyboard play on the board (focus outline, Space to select, Return to move), Help → Keyboard Shortcuts | Translations |
 | Touch screens: tap, double-tap, drag with a finger, long-press to see a covered card | |
-| Undo / redo, restart with the same deal, game-over dialogs, Recently Played | Help pages, keyboard navigation on the board |
-| GTK 3 / Adwaita menu bar, menus, toolbar and status bar | Notarized macOS / code-signed Windows builds |
+| Undo / redo, restart with the same deal, game-over dialogs, Recently Played, Statistics | |
+| Sounds (Control → Sound) | |
+| Help → Contents / Help on *game*: the rules of every game, opened in the web browser | |
+| GTK 3 / Adwaita menu bar, menus, toolbar and status bar | |
 | All 26 card themes (View → Card Style), saved settings | |
 | Packages: Windows MSI (x64, ARM64), Linux Flatpak, .deb and .rpm (x86_64, ARM64), macOS universal .dmg | |
 
@@ -140,11 +143,25 @@ current user; add `MSIINSTALLPERUSER=""` for all users (run from an elevated pro
 
 ## Diagnosing input problems
 
-Tick **Help → Record Input Log** (or start the program with `--log-input`) to record every
+Start the program with `--log-input` to record every
 press, move and release (mouse or finger) and every menu action, with timings, in
 `input-log.txt` next to the settings file:
 `%APPDATA%\rusty-solitaire` on Windows, `~/.config/rusty-solitaire` on Linux,
 `~/Library/Application Support/rusty-solitaire` on macOS.
+On Windows, run it from a command prompt: `"Rusty Solitaire.exe" --log-input` in its
+install folder.
+
+## Help pages
+
+Help → Contents and Help on *game* open `assets/help/rules.html`, built into the program:
+the rules of every game from AisleRiot's manual (GNU FDL), plus pages on playing, the
+keyboard and a glossary. It is one self-contained file so that the Flatpak can pass it to
+the browser; the program writes it to its cache folder first. After changing the games or
+the text, rebuild it from the AisleRiot help sources:
+
+```bash
+python3 tools/gen-help.py ../reference/aisleriot-original/help/C
+```
 
 ## Layout
 
@@ -156,8 +173,10 @@ press, move and release (mouse or finger) and every menu action, with timings, i
 | `src/game.rs` | Table, undo/redo, game state and clock | `game.c` |
 | `src/board.rs` | Card table geometry, input, painting | `board-noclutter.c` |
 | `src/theme.rs` | SVG card themes | `ar-card-theme-svg.c` |
+| `src/sound.rs` | Sound effects (ALSA on Linux, cpal on Windows and macOS) | `ar-sound.c` |
+| `src/help.rs`, `assets/help/` | The help pages, opened in the browser | `ar-help.c`, `help/C/*.xml` |
 | `src/card.rs` | Cards and the deterministic shuffle | `ar-card.c` |
-| `src/main.rs` | Window, menus, dialogs, game chooser | `window.c`, `ar-game-chooser.c` |
+| `src/main.rs` | Window, menus, dialogs, game chooser, statistics | `window.c`, `ar-game-chooser.c`, `stats-dialog.c` |
 | `ui/app.slint` | The GTK 3 look | GTK 3 Adwaita theme |
 
 The games run on the original Aisleriot rule files, so they behave exactly like the

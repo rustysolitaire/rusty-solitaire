@@ -449,6 +449,253 @@ component GameChooser inherits Rectangle {
     }
 }
 
+// ----------------------------------------------------------- statistics --
+
+component StatRow inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> value;
+    in property <length> label-width;
+    spacing: 12px;
+    Text { text: label; color: Gtk.fg; width: label-width; }
+    Text { text: value; color: Gtk.fg; }
+}
+
+// The Statistics dialog (stats-dialog.c): wins and times for this game.
+component StatsDialog inherits Rectangle {
+    in property <string> game;
+    in property <string> wins;
+    in property <string> total;
+    in property <string> percentage;
+    in property <string> best;
+    in property <string> worst;
+    callback response(bool);
+
+    // Modal: block the window underneath.
+    TouchArea { }
+
+    property <length> label-width: max(wins-label.preferred-width, pct-label.preferred-width, best-label.preferred-width);
+    wins-label := Text { text: "Percentage:"; visible: false; }
+    pct-label := Text { text: "Total:"; visible: false; }
+    best-label := Text { text: "Worst:"; visible: false; }
+
+    Rectangle {
+        width: max(360px, content.preferred-width);
+        height: content.preferred-height;
+        background: Gtk.window-bg;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #00000030;
+        drop-shadow-blur: 16px;
+        drop-shadow-offset-y: 3px;
+        drop-shadow-color: #00000060;
+        clip: true;
+
+        content := VerticalLayout {
+            padding: 16px;
+            spacing: 18px;
+            Text {
+                text: "Statistics";
+                font-weight: 700;
+                color: Gtk.fg;
+                horizontal-alignment: center;
+            }
+            Text {
+                text: game;
+                font-weight: 700;
+                color: Gtk.fg;
+                horizontal-alignment: center;
+            }
+            HorizontalLayout {
+                spacing: 18px;
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 6px;
+                    alignment: start;
+                    Text { text: "Wins"; font-weight: 700; color: Gtk.fg; }
+                    VerticalLayout {
+                        padding-left: 12px;
+                        spacing: 6px;
+                        StatRow { label: "Wins:"; value: wins; label-width: label-width; }
+                        StatRow { label: "Total:"; value: total; label-width: label-width; }
+                        StatRow { label: "Percentage:"; value: percentage; label-width: label-width; }
+                    }
+                }
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 6px;
+                    alignment: start;
+                    Text { text: "Time"; font-weight: 700; color: Gtk.fg; }
+                    VerticalLayout {
+                        padding-left: 12px;
+                        spacing: 6px;
+                        StatRow { label: "Best:"; value: best; label-width: label-width; }
+                        StatRow { label: "Worst:"; value: worst; label-width: label-width; }
+                    }
+                }
+            }
+            HorizontalLayout {
+                alignment: end;
+                spacing: 8px;
+                DialogButtonGtk {
+                    label: "Reset";
+                    clicked => { root.response(true); }
+                }
+                DialogButtonGtk {
+                    label: "Close";
+                    clicked => { root.response(false); }
+                }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------ shortcuts --
+
+component KeyCap inherits Rectangle {
+    in property <string> key;
+    // "/" between alternatives is plain text, not a key.
+    property <bool> separator: key == "/";
+    min-width: max(label.preferred-width + 12px, 24px);
+    height: 24px;
+    border-radius: separator ? 0 : 5px;
+    border-width: separator ? 0 : 1px;
+    border-color: Gtk.borders;
+    background: separator ? transparent : #ffffff;
+    drop-shadow-offset-y: separator ? 0 : 1px;
+    drop-shadow-color: #00000025;
+    label := Text {
+        text: key;
+        color: separator ? Gtk.disabled-fg : Gtk.fg;
+        font-size: Gtk.font-size * 0.9;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+struct ShortcutData { keys: [string], text: string }
+struct ShortcutGroup { title: string, rows: [ShortcutData] }
+
+component ShortcutColumn inherits VerticalLayout {
+    in property <[ShortcutGroup]> groups;
+    spacing: 22px;
+    alignment: start;
+    for group in groups: VerticalLayout {
+        spacing: 8px;
+        Text { text: group.title; font-weight: 700; color: Gtk.fg; }
+        for row in group.rows: HorizontalLayout {
+            spacing: 14px;
+            HorizontalLayout {
+                width: 210px;
+                spacing: 4px;
+                alignment: start;
+                for key in row.keys: KeyCap { key: key; }
+            }
+            Text {
+                text: row.text;
+                color: Gtk.fg;
+                wrap: word-wrap;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+                min-width: 180px;
+            }
+        }
+    }
+}
+
+// Help → Keyboard Shortcuts (help-overlay.ui, a GtkShortcutsWindow), plus
+// the board's own keys.
+component ShortcutsDialog inherits Rectangle {
+    callback close();
+
+    TouchArea { clicked => { root.close(); } }
+
+    frame := Rectangle {
+        width: min(root.width - 32px, 900px);
+        height: min(root.height - 32px, body.preferred-height + 124px);
+        background: Gtk.window-bg;
+        border-radius: 8px;
+        border-width: 1px;
+        border-color: #00000030;
+        drop-shadow-blur: 16px;
+        drop-shadow-offset-y: 3px;
+        drop-shadow-color: #00000060;
+        clip: true;
+        TouchArea { }
+
+        VerticalLayout {
+            padding: 16px;
+            spacing: 14px;
+            HorizontalLayout {
+                Text {
+                    text: "Shortcuts";
+                    font-weight: 700;
+                    color: Gtk.fg;
+                    horizontal-alignment: center;
+                    horizontal-stretch: 1;
+                }
+            }
+            Flickable {
+                vertical-stretch: 1;
+                content-height: body.preferred-height;
+                body := VerticalLayout {
+                    width: parent.width;
+                    height: self.preferred-height;
+                    if frame.width >= 820px: HorizontalLayout {
+                        spacing: 36px;
+                        ShortcutColumn { groups: [general, help]; }
+                        ShortcutColumn { groups: [cards]; }
+                    }
+                    if frame.width < 820px: ShortcutColumn { groups: [general, help, cards]; }
+                }
+            }
+            HorizontalLayout {
+                alignment: end;
+                DialogButtonGtk {
+                    label: "Close";
+                    clicked => { root.close(); }
+                }
+            }
+        }
+    }
+
+    property <ShortcutGroup> general: {
+        title: "General",
+        rows: [
+            { keys: ["Ctrl", "N"], text: "Start a new game" },
+            { keys: ["Ctrl", "O"], text: "Select a game" },
+            { keys: ["Ctrl", "D"], text: "Deal" },
+            { keys: ["Ctrl", "Z"], text: "Undo" },
+            { keys: ["Shift", "Ctrl", "Z"], text: "Redo" },
+            { keys: ["F11"], text: "Fullscreen" },
+            { keys: ["Ctrl", "W"], text: "Close window" },
+        ],
+    };
+    property <ShortcutGroup> help: {
+        title: "Help",
+        rows: [
+            { keys: ["Ctrl", "H"], text: "Show a hint" },
+            { keys: ["F1"], text: "Show Help" },
+            { keys: ["Shift", "F1"], text: "Show Help for this game" },
+            { keys: ["Ctrl", "?", "/", "Ctrl", "F1"], text: "Show Keyboard Shortcuts" },
+        ],
+    };
+    property <ShortcutGroup> cards: {
+        title: "Moving cards",
+        rows: [
+            { keys: ["←", "→", "↑", "↓"], text: "Move to the next card or pile" },
+            { keys: ["Ctrl", "←", "/", "Page Up"], text: "Move to the next pile, past this pile's cards" },
+            { keys: ["Home", "/", "End"], text: "First or last face-up card of the pile" },
+            { keys: ["Ctrl", "Home", "/", "End"], text: "First or last pile" },
+            { keys: ["Space"], text: "Select the cards from here up, or unselect them" },
+            { keys: ["Shift", "↑", "/", "↓"], text: "Select one card more or less" },
+            { keys: ["Ctrl", "A"], text: "Select all the cards that can move together" },
+            { keys: ["Shift", "Ctrl", "A"], text: "Unselect" },
+            { keys: ["Return"], text: "Move the selected cards here, or click the pile" },
+            { keys: ["Ctrl", "Return"], text: "Double-click: send the card to a foundation" },
+        ],
+    };
+}
+
 // --------------------------------------------------------------- window --
 
 export component AppWindow inherits Window {
@@ -490,6 +737,14 @@ export component AppWindow inherits Window {
     in property <bool> can-restart;
     in property <bool> fullscreen-mode;
     in property <bool> dialog-visible;
+    in property <bool> stats-visible;
+    in property <string> stats-game;
+    in property <string> stats-wins;
+    in property <string> stats-total;
+    in property <string> stats-percentage;
+    in property <string> stats-best;
+    in property <string> stats-worst;
+    in property <bool> shortcuts-visible;
     in property <string> dialog-message;
     in property <[DialogButton]> dialog-buttons;
 
@@ -504,6 +759,10 @@ export component AppWindow inherits Window {
     callback board-cancel();
     callback dialog-response(string);
     callback chooser-response(bool, int);
+    callback stats-response(bool);
+    callback shortcuts-close();
+    // A key for the card table; returns whether the board used it.
+    callback board-key(string, bool, bool) -> bool;
 
     property <int> open-menu: -1;
     property <length> menu-x;
@@ -521,7 +780,7 @@ export component AppWindow inherits Window {
     function shortcut(event: KeyEvent) -> bool {
         if event.text == Key.F11 { root.action("fullscreen"); return true; }
         if event.text == Key.F1 {
-            root.action(event.modifiers.shift ? "help-game" : "help");
+            root.action(event.modifiers.control ? "shortcuts" : event.modifiers.shift ? "help-game" : "help");
             return true;
         }
         if event.text == Key.Escape {
@@ -529,7 +788,9 @@ export component AppWindow inherits Window {
             if fullscreen-mode { root.action("fullscreen"); return true; }
             return false;
         }
+        if open-menu < 0 && board-keys(event) { return true; }
         if !event.modifiers.control { return false; }
+        if event.text == "?" || event.text == "/" { root.action("shortcuts"); return true; }
         if event.text == "z" || event.text == "Z" {
             root.action(event.modifiers.shift ? "redo" : "undo");
             return true;
@@ -542,10 +803,48 @@ export component AppWindow inherits Window {
         return false;
     }
 
+    // The card table's keys (aisleriot_board_class_init's bindings).
+    function board-key-name(event: KeyEvent) -> string {
+        if event.modifiers.alt || event.modifiers.meta { return ""; }
+        if event.text == Key.LeftArrow { return "left"; }
+        if event.text == Key.RightArrow { return "right"; }
+        if event.text == Key.UpArrow { return "up"; }
+        if event.text == Key.DownArrow { return "down"; }
+        if event.text == Key.Home { return "home"; }
+        if event.text == Key.End { return "end"; }
+        if event.text == Key.PageUp { return "page-up"; }
+        if event.text == Key.PageDown { return "page-down"; }
+        if event.text == " " && !event.modifiers.control { return "space"; }
+        if event.text == Key.Return { return "activate"; }
+        if event.modifiers.control && (event.text == "a" || event.text == "A") {
+            return event.modifiers.shift ? "deselect-all" : "select-all";
+        }
+        return "";
+    }
+
+    function board-keys(event: KeyEvent) -> bool {
+        if board-key-name(event) == "" { return false; }
+        return root.board-key(board-key-name(event), event.modifiers.shift, event.modifiers.control);
+    }
+
     init => { focus-scope.focus(); }
 
     focus-scope := FocusScope {
         key-pressed(event) => {
+            if stats-visible {
+                if event.text == Key.Escape || event.text == Key.Return {
+                    root.stats-response(false);
+                    return accept;
+                }
+                return reject;
+            }
+            if shortcuts-visible {
+                if event.text == Key.Escape || event.text == Key.Return {
+                    root.shortcuts-close();
+                    return accept;
+                }
+                return reject;
+            }
             if chooser-visible {
                 if event.text == Key.Escape {
                     root.chooser-response(false, chooser-selected);
@@ -783,6 +1082,20 @@ export component AppWindow inherits Window {
             message: dialog-message;
             buttons: dialog-buttons;
             response(id) => { root.dialog-response(id); }
+        }
+
+        if stats-visible: StatsDialog {
+            game: stats-game;
+            wins: stats-wins;
+            total: stats-total;
+            percentage: stats-percentage;
+            best: stats-best;
+            worst: stats-worst;
+            response(reset) => { root.stats-response(reset); }
+        }
+
+        if shortcuts-visible: ShortcutsDialog {
+            close => { root.shortcuts-close(); }
         }
     }
 

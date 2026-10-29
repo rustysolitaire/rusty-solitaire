@@ -44,6 +44,9 @@ libxcursor1, libxi6, libxrandr2, libegl1, libgl1"
 RPM_LIBS="libfontconfig.so.1 libxkbcommon.so.0 libxkbcommon-x11.so.0 libwayland-client.so.0 \
 libwayland-cursor.so.0 libwayland-egl.so.1 libX11.so.6 libX11-xcb.so.1 libxcb.so.1 \
 libXcursor.so.1 libXi.so.6 libXrandr.so.2 libEGL.so.1 libGL.so.1"
+# Sound (ALSA, also loaded at runtime): the game plays fine without it.
+DEB_RECOMMENDS="libasound2t64 | libasound2"
+RPM_RECOMMENDS="libasound.so.2()(64bit)"
 
 # Lay out the installed files under $1 (a staging root), with the program in
 # $4 (Debian puts games in /usr/games, Fedora and openSUSE in /usr/bin).
@@ -109,6 +112,7 @@ build_deb() {
         echo "Maintainer: $MAINTAINER"
         echo "Installed-Size: $size"
         echo "Depends: $DEB_DEPENDS"
+        echo "Recommends: $DEB_RECOMMENDS"
         echo "Homepage: $HOMEPAGE"
         echo "Section: games"
         echo "Priority: optional"
@@ -144,6 +148,7 @@ Group:          Amusements/Games
 Packager:       $MAINTAINER
 Requires:       libc.so.6(GLIBC_2.35)(64bit)
 $requires
+Recommends:     $RPM_RECOMMENDS
 # Prebuilt, already stripped program: no build, no debug packages.
 %global debug_package %{nil}
 %global __os_install_post %{nil}

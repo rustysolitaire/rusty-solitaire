@@ -98,6 +98,35 @@ pub struct Outcome {
     pub bell: bool,
 }
 
+/// Keys the board handles itself (the key bindings in
+/// aisleriot_board_class_init).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Key {
+    Left,
+    Right,
+    Up,
+    Down,
+    Home,
+    End,
+    PageUp,
+    PageDown,
+    /// Space: select / unselect the focused cards.
+    Space,
+    /// Return or Enter: click the focused slot, or move the selection to it.
+    Activate,
+    SelectAll,
+    DeselectAll,
+}
+
+/// What a cursor key moves by (GtkMovementStep).
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Step {
+    Visual,
+    Lines,
+    Pages,
+    Ends,
+}
+
 pub struct Board {
     pub width: i32,
     pub height: i32,
@@ -110,8 +139,15 @@ pub struct Board {
     xbaseoffset: i32,
 
     status: ClickStatus,
+    /// The selected cards: slot and index of the first one. `selection_len`
+    /// is the slot's card count when they were selected, to notice the slot
+    /// changing under the selection (slot_changed_cb).
     selection: Option<(usize, usize)>,
+    selection_len: usize,
     show_selection: bool,
+    /// The keyboard focus: slot and card index, -1 for an empty slot.
+    focus: Option<(usize, i32)>,
+    show_focus: bool,
     highlight: Option<usize>,
     revealed: Option<(usize, usize)>,
     drag: Option<Drag>,
@@ -140,7 +176,10 @@ impl Board {
             xbaseoffset: 0,
             status: ClickStatus::None,
             selection: None,
+            selection_len: 0,
             show_selection: false,
+            focus: None,
+            show_focus: false,
             highlight: None,
             revealed: None,
             drag: None,
@@ -354,6 +393,7 @@ impl Board {
         }
 
         game.start();
+        self.validate(game);
         let (slot, card) = self.hit(game, x, y);
         let now = Instant::now();
         let double_time = if touch { DOUBLE_TAP_TIME } else { DOUBLE_CLICK_TIME };
@@ -407,14 +447,17 @@ impl Board {
 
         let drag_valid = card.is_some_and(|c| game.drag_valid(slot, c));
         if drag_valid {
-            self.selection = Some((slot, card.unwrap()));
-            self.show_selection = self.click_to_move;
+            self.set_selection(game, Some((slot, card.unwrap())), self.click_to_move);
             self.status = if self.click_to_move { ClickStatus::NotDrag } else { ClickStatus::MaybeDrag };
         } else {
-            self.selection = None;
-            self.show_selection = false;
+            self.set_selection(game, None, false);
             self.status = ClickStatus::NotDrag;
         }
+        // If the focus is already showing, or the click was on the card that
+        // has the (hidden) focus, show the focus on the clicked card.
+        let card_id = card.map_or(-1, |c| c as i32);
+        let show_focus = self.show_focus || self.focus == Some((slot, card_id));
+        self.set_focus(game, Some(slot), card_id, show_focus);
         if self.click_to_move {
             self.reveal(game, Some(slot), card);
         }
@@ -586,6 +629,12 @@ impl Board {
         moved
     }
 
+    /// Forget the keyboard focus, for a new deal (game_new_cb).
+    pub fn reset_focus(&mut self) {
+        self.focus = None;
+        self.show_focus = false;
+    }
+
     /// Drop any selection or drag, e.g. before undo or a new game.
     pub fn abort(&mut self, game: &mut Game) {
         if let Some(drag) = self.drag.take() {
@@ -597,6 +646,412 @@ impl Board {
         self.highlight = None;
         self.revealed = None;
         self.status = ClickStatus::None;
+    }
+
+    // ---- Keyboard ----
+    //
+    // A port of the ENABLE_KEYNAV parts of board-noclutter.c. The focus is
+    // a slot and a card in it (-1 on an empty slot), drawn as a dashed
+    // outline once the keyboard has been used; Space selects cards and
+    // Return moves them to the focused slot.
+
+    fn slot_len(game: &Game, slot: usize) -> i32 {
+        game.table.slots[slot].cards.len() as i32
+    }
+
+    /// Index of the lowest card that is drawn (slot->len - slot->exposed).
+    fn first_exposed(&self, game: &Game, slot: usize) -> i32 {
+        let s = &game.table.slots[slot];
+        s.cards.len() as i32 - self.slot_geometry(s).exposed as i32
+    }
+
+    fn set_focus(&mut self, game: &Game, slot: Option<usize>, card: i32, show: bool) {
+        self.focus = slot.map(|s| (s, card.min(Self::slot_len(game, s) - 1)));
+        self.show_focus = show && slot.is_some();
+    }
+
+    fn set_selection(&mut self, game: &Game, selection: Option<(usize, usize)>, show: bool) {
+        self.selection = selection;
+        self.selection_len = selection.map_or(0, |(s, _)| game.table.slots[s].cards.len());
+        self.show_selection = show && selection.is_some();
+    }
+
+    /// Keep the focus and selection valid after cards moved (slot_changed_cb):
+    /// a changed slot loses its selection, and the focus moves down to the
+    /// topmost card if its card has gone.
+    fn validate(&mut self, game: &Game) {
+        let n = game.table.slots.len();
+        if let Some((s, _)) = self.selection {
+            if s >= n || game.table.slots[s].cards.len() != self.selection_len {
+                self.selection = None;
+                self.show_selection = false;
+            }
+        }
+        if let Some((s, card)) = self.focus {
+            if s >= n {
+                self.reset_focus();
+            } else {
+                let top = Self::slot_len(game, s) - 1;
+                self.focus = Some((s, if card < 0 { top } else { card.min(top) }));
+            }
+        }
+    }
+
+    /// A key was pressed while the board has the keyboard focus.
+    pub fn key(&mut self, game: &mut Game, key: Key, shift: bool, ctrl: bool) -> Outcome {
+        let mut out = Outcome::default();
+        if !self.ready() || game.table.slots.is_empty() || self.status != ClickStatus::None {
+            return out;
+        }
+        self.validate(game);
+        let ok = match key {
+            Key::Left => self.move_cursor(game, Step::Visual, -1, shift, ctrl),
+            Key::Right => self.move_cursor(game, Step::Visual, 1, shift, ctrl),
+            Key::Up => self.move_cursor(game, Step::Lines, -1, shift, ctrl),
+            Key::Down => self.move_cursor(game, Step::Lines, 1, shift, ctrl),
+            Key::PageUp => self.move_cursor(game, Step::Pages, -1, shift, ctrl),
+            Key::PageDown => self.move_cursor(game, Step::Pages, 1, shift, ctrl),
+            Key::Home => self.move_cursor(game, Step::Ends, -1, shift, ctrl),
+            Key::End => self.move_cursor(game, Step::Ends, 1, shift, ctrl),
+            Key::Space => self.toggle_selection(game),
+            Key::Activate => return self.activate(game, ctrl),
+            Key::SelectAll => self.select_all(game),
+            Key::DeselectAll => {
+                self.set_selection(game, None, false);
+                true
+            }
+        };
+        out.bell = !ok;
+        out
+    }
+
+    /// aisleriot_board_move_cursor
+    fn move_cursor(&mut self, game: &mut Game, step: Step, count: i32, shift: bool, ctrl: bool) -> bool {
+        // No focus yet: start on the first or last slot.
+        if self.focus.is_none() {
+            return match step {
+                Step::Lines | Step::Pages => self.start_end_by_slot(game, -1),
+                Step::Visual => self.start_end_by_slot(game, -count),
+                Step::Ends => self.start_end_by_slot(game, count),
+            };
+        }
+        let moved = match step {
+            Step::Visual if shift => self.extend_selection_along(game, count, true),
+            Step::Visual => self.move_left_right(game, count, ctrl),
+            Step::Lines if shift => self.extend_selection_along(game, count, false),
+            Step::Lines => self.move_up_down(game, count, ctrl),
+            Step::Pages => !shift && self.move_up_down(game, count, true),
+            Step::Ends if shift => self.extend_selection_start_end(game, count),
+            Step::Ends if ctrl => self.start_end_by_slot(game, count),
+            Step::Ends => self.start_end_in_slot(game, count),
+        };
+        if !moved && !self.show_focus {
+            if let Some((s, card)) = self.focus {
+                self.set_focus(game, Some(s), card, true);
+            }
+        }
+        moved
+    }
+
+    fn move_in_slot(&mut self, game: &Game, count: i32) -> bool {
+        let Some((s, card)) = self.focus else { return false };
+        let new = card + count;
+        if new < self.first_exposed(game, s) || new >= Self::slot_len(game, s) {
+            return false;
+        }
+        self.set_focus(game, Some(s), new, true);
+        true
+    }
+
+    /// Home / End: to the end of the run of face-up cards, jumping over a
+    /// run of face-down ones first (as in Athena).
+    fn start_end_in_slot(&mut self, game: &Game, count: i32) -> bool {
+        let Some((s, card)) = self.focus else { return false };
+        let cards = &game.table.slots[s].cards;
+        if cards.is_empty() {
+            return false;
+        }
+        let first = self.first_exposed(game, s);
+        let top = cards.len() as i32 - 1;
+        let in_range = |i: i32| i >= first && i <= top;
+        let face_down = |i: i32| !cards[i as usize].face_up;
+        let mut new = card;
+        loop {
+            new += count;
+            if !(in_range(new) && face_down(new)) {
+                break;
+            }
+        }
+        new -= count;
+        loop {
+            new += count;
+            if !(in_range(new) && !face_down(new)) {
+                break;
+            }
+        }
+        if !in_range(new) || face_down(new) {
+            new -= count;
+        }
+        self.set_focus(game, Some(s), new.clamp(first, top), true);
+        true
+    }
+
+    /// The card to focus when arriving on `slot`: the first exposed card if
+    /// coming from the start of its fan, else the topmost one.
+    fn arrival_card(&self, game: &Game, slot: usize, from_start: bool) -> i32 {
+        let len = Self::slot_len(game, slot);
+        match from_start {
+            true if len > 0 => self.first_exposed(game, slot),
+            true => -1,
+            false => len - 1,
+        }
+    }
+
+    fn left_right_by_slot(&mut self, game: &Game, count: i32) -> bool {
+        let Some((s, _)) = self.focus else { return false };
+        let n = game.table.slots.len() as i32;
+        let mut new = s as i32 + count;
+        // Wrap around.
+        if new < 0 {
+            new = n - 1;
+        } else if new >= n {
+            new = 0;
+        }
+        let new = new as usize;
+        let from_start = game.table.slots[new].expansion.is_right() && count > 0;
+        let card = self.arrival_card(game, new, from_start);
+        self.set_focus(game, Some(new), card, true);
+        true
+    }
+
+    /// Up / Down: the next slot (in slot order) that overlaps this one
+    /// horizontally, wrapping around.
+    fn up_down_by_slot(&mut self, game: &Game, count: i32) -> bool {
+        let Some((s, _)) = self.focus else { return false };
+        let slots = &game.table.slots;
+        let n = slots.len() as i32;
+        let g = self.slot_geometry(&slots[s]);
+        let (x_start, x_end) = (g.x, g.x + g.w);
+        let overlaps = |i: i32| {
+            let g = self.slot_geometry(&slots[i as usize]);
+            g.x <= x_end && g.x + g.w >= x_start
+        };
+        let mut new = s as i32;
+        loop {
+            new += count;
+            if !(new >= 0 && new < n && !overlaps(new)) {
+                break;
+            }
+        }
+        if new < 0 || new == n {
+            new = if count > 0 { -1 } else { n };
+            loop {
+                new += count;
+                if !(new != s as i32 && !overlaps(new)) {
+                    break;
+                }
+            }
+        }
+        let new = new as usize;
+        let from_start = slots[new].expansion.is_down() && count > 0;
+        let card = self.arrival_card(game, new, from_start);
+        self.set_focus(game, Some(new), card, true);
+        true
+    }
+
+    fn start_end_by_slot(&mut self, game: &Game, count: i32) -> bool {
+        let n = game.table.slots.len();
+        if n == 0 {
+            return false;
+        }
+        let (slot, from_start) = if count > 0 { (n - 1, false) } else { (0, true) };
+        let card = self.arrival_card(game, slot, from_start);
+        self.set_focus(game, Some(slot), card, true);
+        true
+    }
+
+    fn move_left_right(&mut self, game: &Game, count: i32, ctrl: bool) -> bool {
+        let Some((s, _)) = self.focus else { return false };
+        // Within a fanned-out slot first, then to the next slot.
+        if !ctrl && game.table.slots[s].expansion.is_right() && self.move_in_slot(game, count) {
+            return true;
+        }
+        self.left_right_by_slot(game, count)
+    }
+
+    fn move_up_down(&mut self, game: &Game, count: i32, ctrl: bool) -> bool {
+        let Some((s, _)) = self.focus else { return false };
+        if !ctrl && game.table.slots[s].expansion.is_down() && self.move_in_slot(game, count) {
+            return true;
+        }
+        self.up_down_by_slot(game, count)
+    }
+
+    /// Shift + arrow along the direction the slot is fanned in.
+    fn extend_selection_along(&mut self, game: &mut Game, count: i32, horizontal: bool) -> bool {
+        let Some((s, _)) = self.focus else { return false };
+        let expansion = game.table.slots[s].expansion;
+        if (horizontal && !expansion.is_right()) || (!horizontal && !expansion.is_down()) {
+            return false;
+        }
+        self.extend_selection_in_slot(game, count)
+    }
+
+    fn extend_selection_in_slot(&mut self, game: &mut Game, count: i32) -> bool {
+        let Some((s, focus_card)) = self.focus else { return false };
+        let len = Self::slot_len(game, s);
+        let first = self.first_exposed(game, s);
+        let new_start = match self.selection {
+            Some((sel, start)) if sel == s => {
+                let new = start as i32 + count;
+                // Only next to the focus.
+                if focus_card - 1 > new || focus_card + 1 < new {
+                    return false;
+                }
+                new
+            }
+            // No selection yet: the topmost card must have the focus.
+            _ => {
+                let new = len + count;
+                if new != focus_card {
+                    return false;
+                }
+                new
+            }
+        };
+        if new_start < first {
+            return false;
+        }
+        if new_start >= len {
+            self.set_selection(game, None, false);
+            return true;
+        }
+        if !game.drag_valid(s, new_start as usize) {
+            return false;
+        }
+        self.set_selection(game, Some((s, new_start as usize)), true);
+        self.move_in_slot(game, count);
+        true
+    }
+
+    /// Select as many cards from the top of the focused slot as can be
+    /// picked up together.
+    fn extend_selection_maximal(&mut self, game: &mut Game) -> bool {
+        let Some((s, _)) = self.focus else { return false };
+        let len = game.table.slots[s].cards.len();
+        let mut start = len;
+        while start > 0 && game.drag_valid(s, start - 1) {
+            start -= 1;
+        }
+        if start == len {
+            return false;
+        }
+        self.set_selection(game, Some((s, start)), true);
+        true
+    }
+
+    fn extend_selection_start_end(&mut self, game: &mut Game, count: i32) -> bool {
+        let Some((s, focus_card)) = self.focus else { return false };
+        let new_focus = if count > 0 {
+            // Shift+End unselects, if the focus is on or above the selection.
+            if !self.selection.is_some_and(|(sel, start)| sel == s && start as i32 >= focus_card) {
+                return false;
+            }
+            self.set_selection(game, None, false);
+            Self::slot_len(game, s)
+        } else {
+            if !self.extend_selection_maximal(game) {
+                self.set_selection(game, None, false);
+                return false;
+            }
+            self.selection.map_or(focus_card, |(_, start)| start as i32)
+        };
+        self.set_focus(game, Some(s), new_focus, true);
+        true
+    }
+
+    fn toggle_selection(&mut self, game: &mut Game) -> bool {
+        let Some((s, card)) = self.focus else { return true };
+        if !self.show_focus {
+            self.set_focus(game, Some(s), card, true);
+        }
+        if card < 0 {
+            return false;
+        }
+        if self.selection == Some((s, card as usize)) && self.show_selection {
+            self.set_selection(game, None, false);
+            return true;
+        }
+        if !game.drag_valid(s, card as usize) {
+            return false;
+        }
+        self.set_selection(game, Some((s, card as usize)), true);
+        true
+    }
+
+    fn select_all(&mut self, game: &mut Game) -> bool {
+        let has_cards = self.focus.is_some_and(|(s, _)| Self::slot_len(game, s) > 0);
+        if !has_cards || !self.extend_selection_maximal(game) {
+            self.set_selection(game, None, false);
+            return false;
+        }
+        true
+    }
+
+    /// Return: click the focused slot; failing that, move the selected
+    /// cards onto it. Ctrl+Return is a double click.
+    fn activate(&mut self, game: &mut Game, ctrl: bool) -> Outcome {
+        let mut out = Outcome::default();
+        let Some((s, card)) = self.focus else {
+            out.bell = true;
+            return out;
+        };
+        // Focus not shown yet: show it, and do nothing else.
+        if !self.show_focus {
+            self.set_focus(game, Some(s), card, true);
+            return out;
+        }
+        game.start();
+        if ctrl {
+            game.double_click(s);
+            out.autoplay = game.has_delayed_call();
+            return out;
+        }
+        if game.click(s) {
+            out.sound = Some("click");
+            out.autoplay = game.has_delayed_call();
+            return out;
+        }
+        if let Some(selection) = self.selection {
+            if card == Self::slot_len(game, s) - 1 {
+                if self.move_selected_to(game, s, &mut out) {
+                    let top = Self::slot_len(game, s) - 1;
+                    self.set_focus(game, Some(s), top, true);
+                    return out;
+                }
+                // Trying to move the cards dropped the selection; put it back.
+                self.set_selection(game, Some(selection), true);
+            }
+        }
+        out.bell = true;
+        out
+    }
+
+    /// The outline around the focused card (get_focus_rect), in pixels.
+    fn focus_rect(&self, game: &Game) -> Option<(i32, i32, i32, i32)> {
+        let (s, card) = self.focus.filter(|_| self.show_focus)?;
+        let slot = game.table.slots.get(s)?;
+        let g = self.slot_geometry(slot);
+        let first = slot.cards.len() as i32 - g.exposed as i32;
+        let (x, y, w, h) = if card >= 0 && card >= first {
+            let delta = card - first;
+            (g.x + delta * g.pixeldx, g.y + delta * g.pixeldy, self.card_w, self.card_h)
+        } else {
+            (g.x, g.y, g.w, g.h)
+        };
+        // focus-line-width + focus-padding
+        let d = (2.0 * self.scale).round() as i32;
+        Some(((x - d).max(0), (y - d).max(0), w + 2 * d, h + 2 * d))
     }
 
     // ---- Painting ----
@@ -630,6 +1085,7 @@ impl Board {
     /// so the result can go to the screen without another copy.
     pub fn paint_into(&mut self, game: &Game, images: &CardImages, out: &mut [u8]) {
         let (w, h) = (self.width.max(1), self.height.max(1));
+        self.validate(game);
         out.copy_from_slice(self.background().data());
         if !self.ready() || images.width as i32 != self.card_w || images.height as i32 != self.card_h {
             return;
@@ -675,6 +1131,13 @@ impl Board {
                 draw(images.card(&slots[slot].cards[card], false), g.x + k * g.pixeldx, g.y + k * g.pixeldy);
             }
         }
+
+        if self.drag.is_none() {
+            if let Some((x, y, rw, rh)) = self.focus_rect(game) {
+                let line = (self.scale.round() as i32).max(1);
+                dashed_outline(out, w, h, (x, y, rw, rh), line);
+            }
+        }
     }
 
     /// The whole board as a new pixmap (tests and benchmarks).
@@ -712,7 +1175,35 @@ impl Board {
             self.revealed,
             self.selection.filter(|_| self.show_selection),
             self.drag.as_ref().map(|d| (d.origin, d.cards.len())),
+            self.focus.filter(|_| self.show_focus),
         )
+    }
+}
+
+/// The keyboard focus outline (gtk_render_focus): a dashed line `line`
+/// pixels wide, light so it shows on the green table.
+fn dashed_outline(dst: &mut [u8], w: i32, h: i32, (x, y, rw, rh): (i32, i32, i32, i32), line: i32) {
+    const COLOR: [u32; 3] = [255, 255, 255];
+    const ALPHA: u32 = 200;
+    let dash = 3 * line;
+    let mut plot = |px: i32, py: i32, along: i32| {
+        if px < 0 || py < 0 || px >= w || py >= h || (along / dash) % 2 == 1 {
+            return;
+        }
+        let i = ((py * w + px) * 4) as usize;
+        for c in 0..3 {
+            dst[i + c] = ((COLOR[c] * ALPHA + dst[i + c] as u32 * (255 - ALPHA) + 127) / 255) as u8;
+        }
+    };
+    for t in 0..line {
+        for px in x..x + rw {
+            plot(px, y + t, px - x);
+            plot(px, y + rh - 1 - t, px - x);
+        }
+        for py in y + line..y + rh - line {
+            plot(x + t, py, py - y);
+            plot(x + rw - 1 - t, py, py - y);
+        }
     }
 }
 
@@ -916,6 +1407,67 @@ mod tests {
         board.release(&mut game, x, y);
         assert_eq!(board.revealed, None);
         assert_eq!(game.table.cards(FIRST_TABLEAU).len(), 3, "a long press moves nothing");
+    }
+
+    #[test]
+    fn keyboard_moves_card() {
+        let (mut game, mut board) = setup();
+        // The first key focuses the first slot: the top card of the stock.
+        board.key(&mut game, Key::Right, false, false);
+        assert_eq!(board.focus, Some((0, 23)));
+        assert!(board.show_focus);
+        board.key(&mut game, Key::Right, false, false);
+        assert_eq!(board.focus, Some((WASTE, 0)));
+        assert!(!board.key(&mut game, Key::Space, false, false).bell);
+        assert_eq!(board.selection, Some((WASTE, 0)));
+        for _ in WASTE..FIRST_TABLEAU {
+            board.key(&mut game, Key::Right, false, false);
+        }
+        assert_eq!(board.focus, Some((FIRST_TABLEAU, 0)));
+        let out = board.key(&mut game, Key::Activate, false, false);
+        assert_eq!(out.sound, Some("click"));
+        assert!(game.table.cards(WASTE).is_empty());
+        assert_eq!(game.table.cards(FIRST_TABLEAU).len(), 2);
+        // The focus follows the moved card; the selection is gone.
+        assert_eq!(board.focus, Some((FIRST_TABLEAU, 1)));
+        assert_eq!(board.selection, None);
+    }
+
+    #[test]
+    fn keyboard_wraps_and_selects() {
+        let (mut game, mut board) = setup();
+        board.key(&mut game, Key::Left, false, false);
+        // Left with no focus starts on the last slot; Left again moves on.
+        let last = game.table.slots.len() - 1;
+        assert_eq!(board.focus.map(|f| f.0), Some(last));
+        board.key(&mut game, Key::Home, false, true);
+        assert_eq!(board.focus, Some((0, 23)));
+        board.key(&mut game, Key::Left, false, false);
+        assert_eq!(board.focus.map(|f| f.0), Some(last), "wraps around");
+        // Space on an empty slot can't select; Space twice unselects.
+        assert!(board.key(&mut game, Key::Space, false, false).bell);
+        board.key(&mut game, Key::Home, false, true);
+        board.key(&mut game, Key::Right, false, false);
+        board.key(&mut game, Key::Space, false, false);
+        assert!(board.selection.is_some());
+        board.key(&mut game, Key::Space, false, false);
+        assert!(board.selection.is_none());
+        board.key(&mut game, Key::SelectAll, false, true);
+        assert_eq!(board.selection, Some((WASTE, 0)));
+        board.key(&mut game, Key::DeselectAll, true, true);
+        assert!(board.selection.is_none());
+    }
+
+    #[test]
+    fn keyboard_up_down_finds_pile_below() {
+        let (mut game, mut board) = setup();
+        board.key(&mut game, Key::Down, false, false);
+        assert_eq!(board.focus, Some((0, 23)), "first key focuses the stock");
+        board.key(&mut game, Key::Down, false, false);
+        // Below the stock is the first tableau pile.
+        assert_eq!(board.focus, Some((FIRST_TABLEAU, 0)));
+        board.key(&mut game, Key::Down, false, false);
+        assert_eq!(board.focus, Some((0, 23)), "wraps back to the stock");
     }
 
     #[test]
