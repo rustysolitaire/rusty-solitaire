@@ -6,7 +6,8 @@
 #
 # into assets/icons/aisleriot-256.png (window icon, Linux packages, Flatpak)
 # and assets/icons/aisleriot.ico (Windows .exe and MSI). With a website
-# folder as argument it also writes that site's img/icon.png and favicon.png.
+# folder as argument it also writes that site's img/icon.png, favicon.png and
+# favicon.ico.
 #
 # Usage: tools/gen-icons.sh [../website]
 #
@@ -32,5 +33,6 @@ if [ $# -gt 0 ]; then
     site=$1/src
     cp "$tmp/256.png" "$site/img/icon.png"
     cp "$tmp/32.png" "$site/favicon.png"
-    echo "wrote $site/img/icon.png and $site/favicon.png"
+    convert "$tmp"/{16,32,48}.png "$site/favicon.ico"
+    echo "wrote $site/img/icon.png, $site/favicon.png and $site/favicon.ico"
 fi
