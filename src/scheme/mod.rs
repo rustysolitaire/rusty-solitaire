@@ -308,8 +308,12 @@ impl Interp {
             self.depth -= 1;
             return err("Stack overflow (recursion too deep)");
         }
-        // Grow the stack on demand: rule files recurse over card lists.
+        // Grow the stack on demand: rule files recurse over card lists. The
+        // web build can't, and gets a large fixed stack instead (.cargo/config.toml).
+        #[cfg(not(target_arch = "wasm32"))]
         let result = stacker::maybe_grow(128 * 1024, 4 * 1024 * 1024, || self.eval_inner(expr.clone(), env.clone()));
+        #[cfg(target_arch = "wasm32")]
+        let result = self.eval_inner(expr.clone(), env.clone());
         self.depth -= 1;
         result
     }

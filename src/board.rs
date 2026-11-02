@@ -9,7 +9,9 @@
 // Copyright (C) 2026 The Rusty Solitaire authors (Rust port)
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
+
+use web_time::Instant;
 
 use resvg::tiny_skia::{Color, FilterQuality, Paint, Pattern, Pixmap, PixmapPaint, Rect, SpreadMode, Transform};
 

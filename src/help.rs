@@ -5,11 +5,13 @@
 // The pages are one self-contained HTML file (made by tools/gen-help.py),
 // written to the cache folder with the page to show first. One file, so it
 // also works from the Flatpak sandbox, which can hand the browser a single
-// file but not a folder of them.
+// file but not a folder of them. The web build shows the same file in the
+// page (see web.rs).
 //
 // Copyright (C) 2026 The Rusty Solitaire authors (Rust port)
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#[cfg(not(target_arch = "wasm32"))]
 use std::{env, fs, path::PathBuf};
 
 static RULES: &str = include_str!("../assets/help/rules.html");
@@ -17,6 +19,7 @@ static RULES: &str = include_str!("../assets/help/rules.html");
 /// The page with the general help and the list of games.
 pub const CONTENTS: &str = "index";
 
+#[cfg(not(target_arch = "wasm32"))]
 fn cache_dir() -> Option<PathBuf> {
     let base = if cfg!(target_os = "windows") {
         env::var_os("LOCALAPPDATA").map(PathBuf::from)
@@ -37,12 +40,19 @@ pub fn page_html(page: &str) -> String {
 }
 
 /// Open the help on `page` in the web browser.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn open(page: &str) -> Result<(), String> {
     let dir = cache_dir().unwrap_or_else(env::temp_dir);
     fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     let path = dir.join(format!("{page}.html"));
     fs::write(&path, page_html(page)).map_err(|e| format!("{}: {e}", path.display()))?;
     open::that_detached(&path).map_err(|e| format!("No web browser could be started.\n\n{e}"))
+}
+
+/// Show the help on `page` in the page around the game, or a new tab.
+#[cfg(target_arch = "wasm32")]
+pub fn open(page: &str) -> Result<(), String> {
+    crate::web::show_help(&page_html(page))
 }
 
 #[cfg(test)]

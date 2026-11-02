@@ -149,6 +149,15 @@ The first page of the setup wizard asks who to install for:
 Silent installs: `msiexec /i Rusty-Solitaire-<version>-x64.msi /qn` (or the `-arm64.msi`) installs just for the
 current user; add `MSIINSTALLPERUSER=""` for all users (run from an elevated prompt).
 
+## Web version (prototype)
+
+```bash
+web/build.sh            # or: web/build.sh --serve
+```
+
+compiles the game to WebAssembly and puts it, with the page that runs it, in `web/dist/`
+(`--serve` then serves it on http://localhost:8090/). See [`web/README.md`](web/README.md).
+
 ## Diagnosing input problems
 
 Start the program with `--log-input` to record every
@@ -196,10 +205,11 @@ build renders its 1024 px icon from the large SVG itself. Both need `rsvg-conver
 | `src/game.rs` | Table, undo/redo, game state and clock | `game.c` |
 | `src/board.rs` | Card table geometry, input, painting | `board-noclutter.c` |
 | `src/theme.rs` | SVG card themes | `ar-card-theme-svg.c` |
-| `src/sound.rs` | Sound effects (ALSA on Linux, cpal on Windows and macOS) | `ar-sound.c` |
+| `src/sound.rs` | Sound effects (ALSA on Linux, cpal on Windows and macOS, Web Audio on the web) | `ar-sound.c` |
 | `src/help.rs`, `assets/help/` | The help pages, opened in the browser | `ar-help.c`, `help/C/*.xml` |
 | `src/card.rs` | Cards and the deterministic shuffle | `ar-card.c` |
 | `src/main.rs` | Window, menus, dialogs, game chooser, statistics | `window.c`, `ar-game-chooser.c`, `stats-dialog.c` |
+| `src/web.rs`, `web/` | The web version's link to its page, and the page | |
 | `ui/app.slint` | The GTK 3 look | GTK 3 Adwaita theme |
 
 The games run on the original Aisleriot rule files, so they behave exactly like the

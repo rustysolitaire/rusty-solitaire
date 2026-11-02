@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rusty Solitaire</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="favicon.ico">
+  <style>
+    html, body { margin: 0; height: 100%; background: #0b4d1f; overflow: hidden; }
+    /* The game draws into the canvas (Slint looks it up by its id) and sizes
+       itself to fill the element around it. Cards are dragged with mouse and
+       finger, so the page mustn't scroll or zoom. */
+    #game { position: fixed; inset: 0; }
+    #canvas { display: block; touch-action: none; outline: none; }
+    #status {
+      position: fixed; inset: 0; display: grid; place-items: center;
+      color: #fff; font: 16px/1.4 Cantarell, system-ui, sans-serif; text-align: center;
+    }
+    #status[hidden] { display: none; }
+    /* The rules, shown over the game (window.rustySolitaireShowHelp). */
+    #help {
+      width: min(900px, 100vw - 32px); height: min(800px, 100vh - 32px); padding: 0;
+      border: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 8px 40px rgb(0 0 0 / .5);
+    }
+    #help[open] { display: flex; flex-direction: column; }
+    #help::backdrop { background: rgb(0 0 0 / .45); }
+    #help form { display: flex; justify-content: flex-end; margin: 0; padding: 6px 8px; background: #073716; }
+    #help iframe { flex: 1; width: 100%; border: 0; display: block; }
+  </style>
+</head>
+<body>
+  <!-- The game on its own, with its own menu bar, toolbar and status bar: for
+       trying out the web build. The website's play page (website/src/play/)
+       puts its own controls around it instead; see README.md. -->
+  <div id="game"><canvas id="canvas" tabindex="0"></canvas></div>
+  <div id="status">Loading Rusty Solitaire…</div>
+  <dialog id="help">
+    <form method="dialog"><button>Close</button></form>
+    <iframe title="Rules"></iframe>
+  </dialog>
+  <script type="module">
+    import init from "./rusty-solitaire.js";
+    const status = document.getElementById("status");
+    const canvas = document.getElementById("canvas");
+    const help = document.getElementById("help");
+    // The game calls this for Help → Contents and Help on <game>, with the
+    // rules as one self-contained HTML page.
+    window.rustySolitaireShowHelp = html => {
+      help.querySelector("iframe").srcdoc = html;
+      help.showModal();
+    };
+    help.addEventListener("close", () => canvas.focus());
+    try {
+      // Runs the game's main(), which shows the window in the canvas.
+      await init();
+      status.hidden = true;
+      canvas.focus();
+    } catch (e) {
+      // winit stops main() with an exception once the event loop runs; the
+      // game keeps going after it.
+      if (String(e).includes("Using exceptions for control flow")) {
+        status.hidden = true;
+      } else {
+        status.textContent = "Rusty Solitaire could not start in this browser.\n" + e;
+        console.error(e);
+      }
+    }
+  </script>
+</body>
+</html>

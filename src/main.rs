@@ -21,10 +21,14 @@ mod scheme;
 mod settings;
 mod sound;
 mod theme;
+#[cfg(target_arch = "wasm32")]
+mod web;
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
+
+use web_time::{SystemTime, UNIX_EPOCH};
 
 use slint::{ComponentHandle, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, Timer, TimerMode, VecModel};
 
@@ -332,6 +336,42 @@ impl App {
             .map(|file| item(&format!("game:{file}"), &rules::display_name(file), "", true))
             .collect()
     }
+
+    /// What the web page's own controls show (web.rs): the status bar, the
+    /// toolbar's buttons and the menus' choices.
+    #[cfg(target_arch = "wasm32")]
+    fn web_state(&mut self) -> web::State {
+        use wasm_bindgen::JsValue;
+        let options: Vec<web::State> = (self.game.options().iter())
+            .map(|o| {
+                web::State::new().set("label", o.label.as_str()).set("value", o.value).set("group", o.group.map_or(JsValue::NULL, JsValue::from))
+            })
+            .collect();
+        let show_score = !self.game.scores_disabled();
+        let game = &self.game;
+        web::State::new()
+            .set("game", game.file())
+            .set("name", game.name())
+            .set("status", game.table.status_message.as_str())
+            .set("score", game.table.score.as_str())
+            .set("showScore", show_score)
+            .set("time", clock_text(game))
+            .set("canUndo", game.can_undo())
+            .set("canRedo", game.can_redo())
+            .set("canDeal", game.can_deal())
+            .set("canRestart", game.state > GameState::Begin || game.can_undo())
+            .set("canHint", game.state <= GameState::Running)
+            .set("options", web::list(options))
+            .set("theme", self.theme.file_name.as_str())
+            .set("sound", self.sound)
+            .set("clickToMove", self.board.click_to_move)
+    }
+}
+
+/// The game clock as the status bar shows it.
+fn clock_text(game: &Game) -> String {
+    let secs = game.elapsed().as_secs();
+    format!("{:02}:{:02}:{:02}", secs / 3600, (secs / 60) % 60, secs % 60)
 }
 
 /// Copy a pixmap into a Slint image. tiny-skia pixmaps are premultiplied.
@@ -372,12 +412,12 @@ struct Ui {
 /// test on. Kept next to the settings file.
 struct InputLog {
     file: RefCell<Option<std::fs::File>>,
-    start: std::time::Instant,
+    start: web_time::Instant,
 }
 
 impl InputLog {
     fn new() -> Self {
-        InputLog { file: RefCell::new(None), start: std::time::Instant::now() }
+        InputLog { file: RefCell::new(None), start: web_time::Instant::now() }
     }
 
     fn path() -> Option<std::path::PathBuf> {
@@ -506,12 +546,15 @@ impl Ui {
         window.set_theme_items(ModelRc::new(VecModel::from(app.theme_items())));
         window.set_recent_items(ModelRc::new(VecModel::from(app.recent_items())));
         self.sync_clock(&window, &app.game);
+        #[cfg(target_arch = "wasm32")]
+        app.web_state().send();
     }
 
     fn sync_clock(&self, window: &AppWindow, game: &Game) {
-        let secs = game.elapsed().as_secs();
-        let text = format!("{:02}:{:02}:{:02}", secs / 3600, (secs / 60) % 60, secs % 60);
+        let text = clock_text(game);
         if window.get_time_text() != text {
+            #[cfg(target_arch = "wasm32")]
+            web::State::new().set("time", text.as_str()).send();
             window.set_time_text(text.into());
         }
     }
@@ -706,7 +749,8 @@ impl Ui {
                     window.set_shortcuts_visible(true);
                 }
             }
-            "close" => {
+            // A web page can't be closed from inside.
+            "close" if cfg!(not(target_arch = "wasm32")) => {
                 let _ = slint::quit_event_loop();
             }
             "undo" | "redo" => {
@@ -859,7 +903,7 @@ impl Ui {
             "new-game" | "restart" | "undo" => self.action(id),
             // Everyone who made AisleRiot, in the help.
             "credits" => self.open_help("credits"),
-            "quit" => {
+            "quit" if cfg!(not(target_arch = "wasm32")) => {
                 let _ = slint::quit_event_loop();
             }
             _ => {}
@@ -963,6 +1007,16 @@ fn main() -> Result<(), slint::PlatformError> {
     {
         let ui = ui.clone();
         window.on_action(move |id| ui.action(&id));
+    }
+    // A web page with its own controls (web.rs).
+    #[cfg(target_arch = "wasm32")]
+    if web::page_has_controls() {
+        window.set_embedded(true);
+        let games = ui.games.iter().map(|g| web::choice(g, &rules::display_name(g)));
+        let themes = theme::theme_files().map(|t| web::choice(t, &theme::display_name(t)));
+        web::State::new().set("games", web::list(games)).set("themes", web::list(themes)).send();
+        let ui = ui.clone();
+        web::on_action(move |id| ui.action(id));
     }
     {
         let ui = ui.clone();
@@ -1084,7 +1138,16 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     ui.sync();
+    #[cfg(target_arch = "wasm32")]
+    web::follow_container_size(&window);
     window.run()?;
+    // In the browser run() returns at once, with the game still going in the
+    // page: keep the window and clock, and there is no leaving to count.
+    if cfg!(target_arch = "wasm32") {
+        std::mem::forget(clock);
+        std::mem::forget(window);
+        return Ok(());
+    }
     // Leaving counts the game in progress (aisleriot_game_finalize).
     ui.app.borrow_mut().update_statistics();
     Ok(())

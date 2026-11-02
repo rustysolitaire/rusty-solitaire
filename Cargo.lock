@@ -4060,6 +4060,7 @@ dependencies = [
  "cpal",
  "embed-resource",
  "fontique",
+ "js-sys",
  "lewton",
  "libloading 0.9.0",
  "open",
@@ -4067,6 +4068,9 @@ dependencies = [
  "slint",
  "slint-build",
  "stacker",
+ "wasm-bindgen",
+ "web-sys",
+ "web-time",
 ]
 
 [[package]]

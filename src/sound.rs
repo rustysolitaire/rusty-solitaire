@@ -8,7 +8,8 @@
 // Linux talks to ALSA directly, loading libasound when the first sound
 // plays, so the program needs no audio library to start (or to build for
 // ARM64). On PipeWire and PulseAudio desktops ALSA's default device goes
-// through them. Windows and macOS use cpal (WASAPI, Core Audio).
+// through them. Windows and macOS use cpal (WASAPI, Core Audio). The web
+// build hands the decoded sounds to the browser's Web Audio.
 //
 // Copyright (C) 2026 The Rusty Solitaire authors (Rust port)
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -16,6 +17,7 @@
 use std::cell::OnceCell;
 use std::collections::HashMap;
 use std::sync::Arc;
+#[cfg(not(target_arch = "wasm32"))]
 use std::sync::mpsc::{self, Sender};
 
 static SOUNDS: [(&str, &[u8]); 4] = [
@@ -27,10 +29,12 @@ static SOUNDS: [(&str, &[u8]); 4] = [
 
 /// Plays sounds without blocking the window. The audio thread starts with
 /// the first sound.
+#[cfg(not(target_arch = "wasm32"))]
 pub struct Sound {
     tx: OnceCell<Option<Sender<&'static str>>>,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Sound {
     pub fn new() -> Self {
         Sound { tx: OnceCell::new() }
@@ -43,6 +47,43 @@ impl Sound {
         });
         if let Some(tx) = tx {
             let _ = tx.send(name);
+        }
+    }
+}
+
+/// Plays sounds through Web Audio. The audio context is made with the first
+/// sound: browsers only allow it after the player has clicked or tapped, and
+/// every sound follows a click or tap.
+#[cfg(target_arch = "wasm32")]
+pub struct Sound {
+    context: OnceCell<Option<web_sys::AudioContext>>,
+    clips: std::cell::RefCell<HashMap<&'static str, Option<web_sys::AudioBuffer>>>,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl Sound {
+    pub fn new() -> Self {
+        Sound { context: OnceCell::new(), clips: Default::default() }
+    }
+
+    pub fn play(&self, name: &'static str) {
+        let Some(context) = self.context.get_or_init(|| web_sys::AudioContext::new().ok()) else { return };
+        if context.state() == web_sys::AudioContextState::Suspended {
+            let _ = context.resume();
+        }
+        let mut clips = self.clips.borrow_mut();
+        let clip = clips.entry(name).or_insert_with(|| {
+            let rate = context.sample_rate();
+            let samples = decode(name, rate as u32)?;
+            let buffer = context.create_buffer(1, samples.len() as u32, rate).ok()?;
+            buffer.copy_to_channel(&samples, 0).ok()?;
+            Some(buffer)
+        });
+        let Some(clip) = clip else { return };
+        let Ok(source) = context.create_buffer_source() else { return };
+        source.set_buffer(Some(clip));
+        if source.connect_with_audio_node(&context.destination()).is_ok() {
+            let _ = source.start();
         }
     }
 }
@@ -78,12 +119,14 @@ fn decode(name: &str, rate: u32) -> Option<Arc<[f32]>> {
 }
 
 /// Sums the sounds that are playing.
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 struct Mixer {
     rate: u32,
     clips: HashMap<&'static str, Option<Arc<[f32]>>>,
     voices: Vec<(Arc<[f32]>, usize)>,
 }
 
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 impl Mixer {
     fn new(rate: u32) -> Self {
         Mixer { rate, clips: HashMap::new(), voices: Vec::new() }
@@ -351,7 +394,7 @@ mod backend {
     }
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
+#[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos", target_arch = "wasm32")))]
 mod backend {
     pub fn run(rx: std::sync::mpsc::Receiver<&'static str>) {
         for _ in rx {}

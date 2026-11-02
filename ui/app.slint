@@ -704,8 +704,8 @@ export component AppWindow inherits Window {
     icon: @image-url("../assets/icons/aisleriot-256.png");
     preferred-width: 1024px;
     preferred-height: 640px;
-    min-width: 400px;
-    min-height: 320px;
+    min-width: embedded ? 240px : 400px;
+    min-height: embedded ? 200px : 320px;
     background: Gtk.window-bg;
     default-font-family: "Cantarell";
     default-font-size: Gtk.font-size;
@@ -729,6 +729,9 @@ export component AppWindow inherits Window {
     in property <string> status-message;
     in property <string> time-text: "00:00:00";
     in property <string> score-text: "0";
+    // On a web page with its own controls: just the card table, without
+    // the menu bar, toolbar and status bar (web.rs).
+    in property <bool> embedded;
     in property <bool> show-toolbar: true;
     in property <bool> show-statusbar: true;
     in property <bool> can-undo;
@@ -871,7 +874,7 @@ export component AppWindow inherits Window {
 
         VerticalLayout {
             // Menu bar
-            if !fullscreen-mode: Rectangle {
+            if !fullscreen-mode && !embedded: Rectangle {
                 height: menubar-height();
                 background: Gtk.window-bg;
                 Rectangle {
@@ -905,7 +908,7 @@ export component AppWindow inherits Window {
             }
 
             // Toolbar
-            if show-toolbar || fullscreen-mode: Rectangle {
+            if !embedded && (show-toolbar || fullscreen-mode): Rectangle {
                 background: Gtk.window-bg;
                 height: 42px;
                 HorizontalLayout {
@@ -1004,7 +1007,7 @@ export component AppWindow inherits Window {
             }
 
             // Status bar
-            if show-statusbar && !fullscreen-mode: Rectangle {
+            if show-statusbar && !fullscreen-mode && !embedded: Rectangle {
                 background: Gtk.window-bg;
                 HorizontalLayout {
                     padding-left: 10px;
@@ -1100,7 +1103,7 @@ export component AppWindow inherits Window {
     }
 
     pure function menubar-height() -> length {
-        fullscreen-mode ? 0px : (title-height.preferred-height + 8px);
+        fullscreen-mode || embedded ? 0px : (title-height.preferred-height + 8px);
     }
     title-height := Text { text: "Game"; visible: false; }
 }

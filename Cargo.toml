@@ -10,11 +10,27 @@ publish = false
 [dependencies]
 slint = "1.18"
 resvg = "0.49"
-stacker = "0.1"
-# Sound effects: the Ogg Vorbis files decoded in Rust, and the rules pages
-# opened in the web browser.
+# Sound effects: the Ogg Vorbis files decoded in Rust.
 lewton = "0.10"
+# std::time::Instant and SystemTime, which also work in the web build.
+web-time = "1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+stacker = "0.1"
+# The rules pages opened in the web browser.
 open = "5"
+
+# The web build (WebAssembly in a browser page, see web/README.md): settings in
+# the browser's local storage, sound through Web Audio, the rules in a new tab.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
+    "AudioBuffer", "AudioBufferSourceNode", "AudioContext", "AudioContextState",
+    "AudioDestinationNode", "AudioNode", "AudioScheduledSourceNode", "BaseAudioContext",
+    "Blob", "BlobPropertyBag", "Document", "Element", "ResizeObserver", "Storage", "Url",
+    "Window",
+] }
 
 # Load fontconfig at runtime instead of linking it (enables the option on the
 # font library Slint uses). Then building for Linux needs no development

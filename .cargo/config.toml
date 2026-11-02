@@ -9,3 +9,8 @@ rustflags = ["-C", "target-feature=+crt-static"]
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
 
+
+# The web build (web/build.sh). The Scheme interpreter can't grow its stack in
+# the browser as it does on the desktop (stacker), so start with a large one.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=-zstack-size=33554432"]
